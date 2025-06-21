@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Camera, ArrowLeft, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MaintenanceRecord {
   id: string
@@ -39,30 +40,34 @@ interface MaintenanceStatus {
   interval: TagInterval
 }
 
-const DEFAULT_TAG_INTERVALS: TagInterval[] = [
-  { tag: "Oil Change", kilometers: 3000, days: 90, enabled: true },
-  { tag: "Air Filter", kilometers: 6000, days: 180, enabled: true },
-  { tag: "Spark Plug", kilometers: 8000, days: 365, enabled: true },
-  { tag: "Chain Cleaning", kilometers: 1000, days: 30, enabled: true },
-  { tag: "Brake Pads", kilometers: 15000, days: 730, enabled: true },
-  { tag: "Tire Check", kilometers: 5000, days: 180, enabled: true },
-  { tag: "Battery Check", kilometers: 10000, days: 365, enabled: true },
-]
-
 export default function TrackPage() {
+  const { t } = useLanguage()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
   const [currentKm, setCurrentKm] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [maintenanceStatus, setMaintenanceStatus] = useState<MaintenanceStatus[]>([])
-  const [tagIntervals, setTagIntervals] = useState<TagInterval[]>(DEFAULT_TAG_INTERVALS)
+  const [tagIntervals, setTagIntervals] = useState<TagInterval[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Update DEFAULT_TAG_INTERVALS to use translations:
+  const DEFAULT_TAG_INTERVALS: TagInterval[] = [
+    { tag: t("oilChange"), kilometers: 3000, days: 90, enabled: true },
+    { tag: t("airFilter"), kilometers: 6000, days: 180, enabled: true },
+    { tag: t("sparkPlug"), kilometers: 8000, days: 365, enabled: true },
+    { tag: t("chainCleaning"), kilometers: 1000, days: 30, enabled: true },
+    { tag: t("brakePads"), kilometers: 15000, days: 730, enabled: true },
+    { tag: t("tireCheck"), kilometers: 5000, days: 180, enabled: true },
+    { tag: t("batteryCheck"), kilometers: 10000, days: 365, enabled: true },
+  ]
 
   useEffect(() => {
     // Load tag intervals from localStorage
     const savedIntervals = localStorage.getItem("tag-intervals")
     if (savedIntervals) {
       setTagIntervals(JSON.parse(savedIntervals))
+    } else {
+      setTagIntervals(DEFAULT_TAG_INTERVALS)
     }
   }, [])
 
@@ -201,6 +206,17 @@ export default function TrackPage() {
     })
   }
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "overdue":
+        return t("overdue")
+      case "due-soon":
+        return t("dueSoon")
+      default:
+        return t("ok")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto space-y-6">
@@ -211,15 +227,15 @@ export default function TrackPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Maintenance Check</h1>
+          <h1 className="text-xl font-bold">{t("maintenanceCheck")}</h1>
         </div>
 
         {/* Step 1: Photo Capture */}
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>Current Odometer Reading</CardTitle>
-              <CardDescription>Take a photo of your current odometer to check maintenance status</CardDescription>
+              <CardTitle>{t("currentOdometerReading")}</CardTitle>
+              <CardDescription>{t("takePhotoOdometer")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <input
@@ -238,7 +254,7 @@ export default function TrackPage() {
                   variant="outline"
                 >
                   <Camera className="h-8 w-8" />
-                  Take Current Reading
+                  {t("takeCurrentReading")}
                 </Button>
               ) : (
                 <div className="space-y-4">
@@ -250,7 +266,7 @@ export default function TrackPage() {
                   {isProcessing && (
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Analyzing maintenance status...</p>
+                      <p className="text-sm text-gray-600">{t("analyzingMaintenanceStatus")}</p>
                     </div>
                   )}
                 </div>
@@ -258,17 +274,17 @@ export default function TrackPage() {
 
               {/* Manual input option */}
               <div className="space-y-2">
-                <Label htmlFor="manual-km">Or enter manually:</Label>
+                <Label htmlFor="manual-km">{t("orEnterManually")}:</Label>
                 <div className="flex gap-2">
                   <Input
                     id="manual-km"
                     type="number"
                     value={currentKm}
                     onChange={(e) => setCurrentKm(e.target.value)}
-                    placeholder="Current kilometers"
+                    placeholder={t("currentKilometers")}
                   />
                   <Button onClick={() => analyzeMaintenanceStatus(Number.parseInt(currentKm))} disabled={!currentKm}>
-                    Check
+                    {t("check")}
                   </Button>
                 </div>
               </div>
@@ -281,18 +297,18 @@ export default function TrackPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Current Reading</CardTitle>
+                <CardTitle>{t("currentReading")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">{Number.parseInt(currentKm).toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">Kilometers</div>
+                  <div className="text-sm text-gray-600">{t("kilometers")}</div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Maintenance Status</h2>
+              <h2 className="text-lg font-semibold">{t("maintenanceStatus")}</h2>
 
               {maintenanceStatus.map((status) => (
                 <Card key={status.tag} className={`border-2 ${getStatusColor(status.status)}`}>
@@ -311,29 +327,33 @@ export default function TrackPage() {
                               : "secondary"
                         }
                       >
-                        {status.status === "overdue" ? "Overdue" : status.status === "due-soon" ? "Due Soon" : "OK"}
+                        {getStatusText(status.status)}
                       </Badge>
                     </div>
 
                     {status.lastMaintenance ? (
                       <div className="space-y-2">
                         <div className="text-sm text-gray-600">
-                          Last: {status.lastMaintenance.kilometers.toLocaleString()} km (
+                          {t("last")}: {status.lastMaintenance.kilometers.toLocaleString()} km (
                           {formatDate(status.lastMaintenance.date)})
                         </div>
 
                         {status.interval.kilometers && (
                           <div className="space-y-1">
                             <div className="flex justify-between text-sm">
-                              <span>Distance: {status.kmSinceLastMaintenance.toLocaleString()} km</span>
-                              <span>{status.interval.kilometers.toLocaleString()} km interval</span>
+                              <span>
+                                {t("distance")}: {status.kmSinceLastMaintenance.toLocaleString()} km
+                              </span>
+                              <span>
+                                {status.interval.kilometers.toLocaleString()} km {t("interval")}
+                              </span>
                             </div>
                             <Progress value={getProgressValue(status)} className="h-2" />
                             {status.kmUntilDue !== undefined && (
                               <div className="text-xs text-gray-500">
                                 {status.kmUntilDue > 0
-                                  ? `${status.kmUntilDue.toLocaleString()} km remaining`
-                                  : `${Math.abs(status.kmUntilDue).toLocaleString()} km overdue`}
+                                  ? `${status.kmUntilDue.toLocaleString()} km ${t("remaining")}`
+                                  : `${Math.abs(status.kmUntilDue).toLocaleString()} km ${t("overdue")}`}
                               </div>
                             )}
                           </div>
@@ -341,13 +361,13 @@ export default function TrackPage() {
 
                         {status.interval.days && (
                           <div className="text-sm text-gray-600">
-                            Days: {status.daysSinceLastMaintenance} / {status.interval.days}
+                            {t("days")}: {status.daysSinceLastMaintenance} / {status.interval.days}
                             {status.daysUntilDue !== undefined && (
                               <span className="ml-2">
                                 (
                                 {status.daysUntilDue > 0
-                                  ? `${status.daysUntilDue} days left`
-                                  : `${Math.abs(status.daysUntilDue)} days overdue`}
+                                  ? `${status.daysUntilDue} ${t("daysLeft")}`
+                                  : `${Math.abs(status.daysUntilDue)} ${t("daysOverdue")}`}
                                 )
                               </span>
                             )}
@@ -355,7 +375,7 @@ export default function TrackPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-600">No previous maintenance recorded</div>
+                      <div className="text-sm text-gray-600">{t("noPreviousMaintenance")}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -364,10 +384,10 @@ export default function TrackPage() {
 
             <div className="flex gap-4">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                Check Again
+                {t("checkAgain")}
               </Button>
               <Link href="/add-maintenance" className="flex-1">
-                <Button className="w-full">Add Maintenance</Button>
+                <Button className="w-full">{t("addMaintenance")}</Button>
               </Link>
             </div>
           </div>

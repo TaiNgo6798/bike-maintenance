@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Bell, Trash2, Plus, X } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/contexts/language-context"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 interface TagInterval {
   tag: string
@@ -17,17 +19,19 @@ interface TagInterval {
   enabled: boolean
 }
 
-const DEFAULT_TAG_INTERVALS: TagInterval[] = [
-  { tag: "Oil Change", kilometers: 3000, days: 90, enabled: true },
-  { tag: "Air Filter", kilometers: 6000, days: 180, enabled: true },
-  { tag: "Spark Plug", kilometers: 8000, days: 365, enabled: true },
-  { tag: "Chain Cleaning", kilometers: 1000, days: 30, enabled: true },
-  { tag: "Brake Pads", kilometers: 15000, days: 730, enabled: true },
-  { tag: "Tire Check", kilometers: 5000, days: 180, enabled: true },
-  { tag: "Battery Check", kilometers: 10000, days: 365, enabled: true },
-]
-
 export default function SettingsPage() {
+  const { t } = useLanguage()
+
+  const DEFAULT_TAG_INTERVALS: TagInterval[] = [
+    { tag: t("oilChange"), kilometers: 3000, days: 90, enabled: true },
+    { tag: t("airFilter"), kilometers: 6000, days: 180, enabled: true },
+    { tag: t("sparkPlug"), kilometers: 8000, days: 365, enabled: true },
+    { tag: t("chainCleaning"), kilometers: 1000, days: 30, enabled: true },
+    { tag: t("brakePads"), kilometers: 15000, days: 730, enabled: true },
+    { tag: t("tireCheck"), kilometers: 5000, days: 180, enabled: true },
+    { tag: t("batteryCheck"), kilometers: 10000, days: 365, enabled: true },
+  ]
+
   const [tagIntervals, setTagIntervals] = useState<TagInterval[]>(DEFAULT_TAG_INTERVALS)
   const [notifications, setNotifications] = useState(true)
   const [newTagName, setNewTagName] = useState("")
@@ -67,7 +71,7 @@ export default function SettingsPage() {
   }
 
   const removeTag = (index: number) => {
-    if (confirm(`Remove "${tagIntervals[index].tag}" tag and its interval?`)) {
+    if (confirm(t("confirmRemoveTag").replace("{tag}", tagIntervals[index].tag))) {
       const updated = tagIntervals.filter((_, i) => i !== index)
       setTagIntervals(updated)
       localStorage.setItem("tag-intervals", JSON.stringify(updated))
@@ -80,11 +84,11 @@ export default function SettingsPage() {
   }
 
   const clearAllData = () => {
-    if (confirm("Are you sure you want to clear all maintenance records? This cannot be undone.")) {
+    if (confirm(t("confirmClearData"))) {
       localStorage.removeItem("maintenance-records")
       localStorage.removeItem("tag-intervals")
       localStorage.removeItem("notifications-enabled")
-      alert("All data cleared successfully!")
+      alert(t("dataClearedSuccess"))
     }
   }
 
@@ -98,7 +102,7 @@ export default function SettingsPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Settings</h1>
+          <h1 className="text-xl font-bold">{t("settings")}</h1>
         </div>
 
         {/* Notifications */}
@@ -106,29 +110,40 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications
+              {t("notifications")}
             </CardTitle>
-            <CardDescription>Get notified when maintenance is due</CardDescription>
+            <CardDescription>{t("getNotified")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <Label htmlFor="notifications">Enable notifications</Label>
+              <Label htmlFor="notifications">{t("enableNotifications")}</Label>
               <Switch id="notifications" checked={notifications} onCheckedChange={toggleNotifications} />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Language */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("language")}</CardTitle>
+            <CardDescription>{t("chooseLanguage")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LanguageSwitcher />
           </CardContent>
         </Card>
 
         {/* Maintenance Tags & Intervals */}
         <Card>
           <CardHeader>
-            <CardTitle>Maintenance Tags & Intervals</CardTitle>
-            <CardDescription>Configure maintenance tags and their reminder intervals</CardDescription>
+            <CardTitle>{t("maintenanceTagsIntervals")}</CardTitle>
+            <CardDescription>{t("configureMaintenanceTags")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Add New Tag */}
             <div className="flex gap-2">
               <Input
-                placeholder="Add new maintenance tag"
+                placeholder={t("addNewMaintenanceTag")}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && addNewTag()}
@@ -164,7 +179,7 @@ export default function SettingsPage() {
                 {tagInterval.enabled && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm">Every (km)</Label>
+                      <Label className="text-sm">{t("everyKm")}</Label>
                       <Input
                         type="number"
                         value={tagInterval.kilometers || ""}
@@ -175,7 +190,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">Every (days)</Label>
+                      <Label className="text-sm">{t("everyDays")}</Label>
                       <Input
                         type="number"
                         value={tagInterval.days || ""}
@@ -193,13 +208,13 @@ export default function SettingsPage() {
         {/* Data Management */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">Data Management</CardTitle>
-            <CardDescription>Manage your maintenance data</CardDescription>
+            <CardTitle className="text-red-600">{t("dataManagement")}</CardTitle>
+            <CardDescription>{t("manageMaintenanceData")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="destructive" onClick={clearAllData} className="w-full flex items-center gap-2">
               <Trash2 className="h-4 w-4" />
-              Clear All Data
+              {t("clearAllData")}
             </Button>
           </CardContent>
         </Card>
@@ -207,11 +222,11 @@ export default function SettingsPage() {
         {/* App Info */}
         <Card>
           <CardHeader>
-            <CardTitle>About</CardTitle>
+            <CardTitle>{t("about")}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-gray-600 space-y-2">
             <p>Bike Maintenance Tracker v1.0</p>
-            <p>Keep track of your motorcycle maintenance with photo records and automatic reminders.</p>
+            <p>{t("keepTrackMotorcycle")}</p>
           </CardContent>
         </Card>
       </div>

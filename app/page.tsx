@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Camera, History, Settings, Bell, Wrench, Gauge } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MaintenanceRecord {
   id: string
@@ -20,6 +21,7 @@ interface MaintenanceRecord {
 }
 
 export default function HomePage() {
+  const { t } = useLanguage()
   const [records, setRecords] = useState<MaintenanceRecord[]>([])
   const [overdueCount, setOverdueCount] = useState(0)
 
@@ -98,20 +100,20 @@ export default function HomePage() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Wrench className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold">Bike Maintenance</h1>
+            <h1 className="text-2xl font-bold">{t("appName")}</h1>
           </div>
-          <p className="text-gray-600">Track your motorcycle maintenance</p>
+          <p className="text-gray-600">{t("appDescription")}</p>
         </div>
 
         {/* Current Status */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Current Status
+              {t("currentStatus")}
               {overdueCount > 0 && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <Bell className="h-3 w-3" />
-                  {overdueCount} Due
+                  {overdueCount} {t("due")}
                 </Badge>
               )}
             </CardTitle>
@@ -119,7 +121,7 @@ export default function HomePage() {
           <CardContent>
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600">{currentKm.toLocaleString()}</div>
-              <div className="text-sm text-gray-600">Current Kilometers</div>
+              <div className="text-sm text-gray-600">{t("currentKilometers")}</div>
             </div>
           </CardContent>
         </Card>
@@ -129,19 +131,19 @@ export default function HomePage() {
           <Link href="/add-maintenance">
             <Button className="w-full h-20 flex flex-col gap-2">
               <Camera className="h-5 w-5" />
-              <span className="text-xs">Add Record</span>
+              <span className="text-xs">{t("addRecord")}</span>
             </Button>
           </Link>
           <Link href="/track">
             <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
               <Gauge className="h-5 w-5" />
-              <span className="text-xs">Check Status</span>
+              <span className="text-xs">{t("checkStatus")}</span>
             </Button>
           </Link>
           <Link href="/history">
             <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
               <History className="h-5 w-5" />
-              <span className="text-xs">History</span>
+              <span className="text-xs">{t("history")}</span>
             </Button>
           </Link>
         </div>
@@ -150,10 +152,10 @@ export default function HomePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              Recent Maintenance
+              {t("recentMaintenance")}
               <Link href="/history">
                 <Button variant="ghost" size="sm">
-                  View All
+                  {t("viewAll")}
                 </Button>
               </Link>
             </CardTitle>
@@ -162,8 +164,8 @@ export default function HomePage() {
             {getRecentRecords().length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Wrench className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No maintenance records yet</p>
-                <p className="text-sm">Add your first maintenance record!</p>
+                <p>{t("noRecordsYet")}</p>
+                <p className="text-sm">{t("addFirstRecord")}</p>
               </div>
             ) : (
               getRecentRecords().map((record) => (
@@ -194,7 +196,7 @@ export default function HomePage() {
         <Link href="/settings">
           <Button variant="outline" className="w-full flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Settings & Intervals
+            {t("settingsIntervals")}
           </Button>
         </Link>
       </div>

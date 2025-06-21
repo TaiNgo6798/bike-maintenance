@@ -12,19 +12,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Camera, ArrowLeft, Check, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-const PREDEFINED_TAGS = [
-  "Oil Change",
-  "Air Filter",
-  "Spark Plug",
-  "Chain Cleaning",
-  "Brake Pads",
-  "Tire Check",
-  "Battery Check",
-]
+import { useLanguage } from "@/contexts/language-context"
 
 export default function AddMaintenancePage() {
-  const router = useRouter()
+  const { t } = useLanguage()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
   const [kilometers, setKilometers] = useState("")
@@ -33,6 +24,17 @@ export default function AddMaintenancePage() {
   const [notes, setNotes] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const PREDEFINED_TAGS = [
+    t("oilChange"),
+    t("airFilter"),
+    t("sparkPlug"),
+    t("chainCleaning"),
+    t("brakePads"),
+    t("tireCheck"),
+    t("batteryCheck"),
+  ]
 
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -98,15 +100,15 @@ export default function AddMaintenancePage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Add Maintenance</h1>
+          <h1 className="text-xl font-bold">{t("addMaintenance")}</h1>
         </div>
 
         {/* Step 1: Photo Capture */}
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>Take Odometer Photo</CardTitle>
-              <CardDescription>Take a clear photo of your bike's odometer display</CardDescription>
+              <CardTitle>{t("takeOdometerPhoto")}</CardTitle>
+              <CardDescription>{t("takePhotoDescription")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <input
@@ -125,7 +127,7 @@ export default function AddMaintenancePage() {
                   variant="outline"
                 >
                   <Camera className="h-8 w-8" />
-                  Tap to take photo
+                  {t("tapToTakePhoto")}
                 </Button>
               ) : (
                 <div className="space-y-4">
@@ -137,7 +139,7 @@ export default function AddMaintenancePage() {
                   {isProcessing && (
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Detecting kilometers...</p>
+                      <p className="text-sm text-gray-600">{t("detectingKilometers")}</p>
                     </div>
                   )}
                 </div>
@@ -151,18 +153,18 @@ export default function AddMaintenancePage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Confirm Reading</CardTitle>
-                <CardDescription>Verify the detected odometer reading</CardDescription>
+                <CardTitle>{t("confirmReading")}</CardTitle>
+                <CardDescription>{t("verifyReading")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="kilometers">Kilometers</Label>
+                  <Label htmlFor="kilometers">{t("kilometers")}</Label>
                   <Input
                     id="kilometers"
                     type="number"
                     value={kilometers}
                     onChange={(e) => setKilometers(e.target.value)}
-                    placeholder="Enter kilometers"
+                    placeholder={t("enterKilometers")}
                   />
                 </div>
               </CardContent>
@@ -170,8 +172,8 @@ export default function AddMaintenancePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Select Maintenance Tags</CardTitle>
-                <CardDescription>Choose what maintenance was performed</CardDescription>
+                <CardTitle>{t("selectMaintenanceTags")}</CardTitle>
+                <CardDescription>{t("chooseMaintenancePerformed")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Predefined Tags */}
@@ -191,7 +193,7 @@ export default function AddMaintenancePage() {
                 {/* Custom Tag Input */}
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Add custom tag"
+                    placeholder={t("addCustomTag")}
                     value={customTag}
                     onChange={(e) => setCustomTag(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && addCustomTag()}
@@ -204,7 +206,7 @@ export default function AddMaintenancePage() {
                 {/* Selected Tags */}
                 {selectedTags.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Selected Tags:</Label>
+                    <Label>{t("selectedTags")}:</Label>
                     <div className="flex flex-wrap gap-2">
                       {selectedTags.map((tag) => (
                         <Badge key={tag} className="flex items-center gap-1">
@@ -220,11 +222,11 @@ export default function AddMaintenancePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Notes (Optional)</CardTitle>
+                <CardTitle>{t("notesOptional")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder="Add any additional notes..."
+                  placeholder={t("addAdditionalNotes")}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -233,7 +235,7 @@ export default function AddMaintenancePage() {
 
             <div className="flex gap-4">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                Back
+                {t("back")}
               </Button>
               <Button
                 onClick={handleSave}
@@ -241,7 +243,7 @@ export default function AddMaintenancePage() {
                 disabled={!kilometers || selectedTags.length === 0}
               >
                 <Check className="h-4 w-4" />
-                Save Record
+                {t("saveRecord")}
               </Button>
             </div>
           </div>

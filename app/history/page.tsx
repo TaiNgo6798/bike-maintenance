@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Search, Calendar, MapPin } from "lucide-react"
 import Link from "next/link"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MaintenanceRecord {
   id: string
@@ -18,6 +19,7 @@ interface MaintenanceRecord {
 }
 
 export default function HistoryPage() {
+  const { t } = useLanguage()
   const [records, setRecords] = useState<MaintenanceRecord[]>([])
   const [filteredRecords, setFilteredRecords] = useState<MaintenanceRecord[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -45,11 +47,23 @@ export default function HistoryPage() {
   }, [searchTerm, records])
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
+    const date = new Date(dateString)
+    const months = [
+      t("jan"),
+      t("feb"),
+      t("mar"),
+      t("apr"),
+      t("may"),
+      t("jun"),
+      t("jul"),
+      t("aug"),
+      t("sep"),
+      t("oct"),
+      t("nov"),
+      t("dec"),
+    ]
+
+    return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
   }
 
   const getKilometersSince = (currentKm: number, previousKm: number) => {
@@ -66,14 +80,14 @@ export default function HistoryPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Maintenance History</h1>
+          <h1 className="text-xl font-bold">{t("maintenanceHistory")}</h1>
         </div>
 
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by tags or notes..."
+            placeholder={t("searchByTags")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -85,7 +99,7 @@ export default function HistoryPage() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">{records.length}</div>
-              <div className="text-sm text-gray-600">Total Records</div>
+              <div className="text-sm text-gray-600">{t("totalRecords")}</div>
             </CardContent>
           </Card>
           <Card>
@@ -93,7 +107,7 @@ export default function HistoryPage() {
               <div className="text-2xl font-bold text-green-600">
                 {records.length > 0 ? records[0].kilometers.toLocaleString() : "0"}
               </div>
-              <div className="text-sm text-gray-600">Latest KM</div>
+              <div className="text-sm text-gray-600">{t("latestKM")}</div>
             </CardContent>
           </Card>
         </div>
@@ -103,7 +117,7 @@ export default function HistoryPage() {
           {filteredRecords.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center text-gray-500">
-                {searchTerm ? "No records match your search" : "No maintenance records yet"}
+                {searchTerm ? t("noRecordsMatch") : t("noRecordsYet")}
               </CardContent>
             </Card>
           ) : (
