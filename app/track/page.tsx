@@ -69,6 +69,7 @@ export default function TrackPage() {
     } else {
       setTagIntervals(DEFAULT_TAG_INTERVALS)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
