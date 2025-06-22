@@ -12,8 +12,6 @@ export const metadata: Metadata = {
   description: "Track your motorcycle maintenance with photos and reminders",
   generator: 'v0.dev',
   manifest: '/manifest.json',
-  themeColor: '#000000',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
