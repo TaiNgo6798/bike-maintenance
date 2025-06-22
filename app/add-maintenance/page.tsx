@@ -29,11 +29,6 @@ export default function AddMaintenancePage() {
   const PREDEFINED_TAGS = [
     t("oilChange"),
     t("airFilter"),
-    t("sparkPlug"),
-    t("chainCleaning"),
-    t("brakePads"),
-    t("tireCheck"),
-    t("batteryCheck"),
   ]
 
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,7 +191,7 @@ export default function AddMaintenancePage() {
                     placeholder={t("addCustomTag")}
                     value={customTag}
                     onChange={(e) => setCustomTag(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addCustomTag()}
+                    onKeyDown={(e) => e.key === "Enter" && addCustomTag()}
                   />
                   <Button onClick={addCustomTag} size="icon" variant="outline">
                     <Plus className="h-4 w-4" />

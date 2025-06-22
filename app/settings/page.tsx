@@ -25,11 +25,6 @@ export default function SettingsPage() {
   const DEFAULT_TAG_INTERVALS: TagInterval[] = [
     { tag: t("oilChange"), kilometers: 3000, days: 90, enabled: true },
     { tag: t("airFilter"), kilometers: 6000, days: 180, enabled: true },
-    { tag: t("sparkPlug"), kilometers: 8000, days: 365, enabled: true },
-    { tag: t("chainCleaning"), kilometers: 1000, days: 30, enabled: true },
-    { tag: t("brakePads"), kilometers: 15000, days: 730, enabled: true },
-    { tag: t("tireCheck"), kilometers: 5000, days: 180, enabled: true },
-    { tag: t("batteryCheck"), kilometers: 10000, days: 365, enabled: true },
   ]
 
   const [tagIntervals, setTagIntervals] = useState<TagInterval[]>(DEFAULT_TAG_INTERVALS)
@@ -146,7 +141,7 @@ export default function SettingsPage() {
                 placeholder={t("addNewMaintenanceTag")}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && addNewTag()}
+                onKeyDown={(e) => e.key === "Enter" && addNewTag()}
               />
               <Button onClick={addNewTag} size="icon" variant="outline">
                 <Plus className="h-4 w-4" />
