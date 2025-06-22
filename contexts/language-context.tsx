@@ -61,7 +61,7 @@ const translations = {
     currentOdometerReading: "Current Odometer Reading",
     takePhotoToCheck: "Take a photo of your current odometer to check maintenance status",
     takeCurrentReading: "Take Current Reading",
-    orEnterManually: "Or enter manually:",
+    orEnterManually: "Or enter manually",
     currentKilometers2: "Current kilometers",
     check: "Check",
     analyzingMaintenanceStatus: "Analyzing maintenance status...",
@@ -108,6 +108,8 @@ const translations = {
     appVersion: "Bike Maintenance Tracker v1.0",
     appAbout: "Keep track of your motorcycle maintenance with photo records and automatic reminders.",
     language: "Language",
+    tagMustHaveName: "Tag must have a name",
+    save: "Save",
 
     // Maintenance Tags
     oilChange: "Oil Change",
@@ -222,7 +224,7 @@ const translations = {
     currentOdometerReading: "Số km hiện tại",
     takePhotoToCheck: "Chụp ảnh đồng hồ km hiện tại để kiểm tra tình trạng bảo dưỡng",
     takeCurrentReading: "Chụp số km hiện tại",
-    orEnterManually: "Hoặc nhập thủ công:",
+    orEnterManually: "Hoặc nhập thủ công",
     currentKilometers2: "Số km hiện tại",
     check: "Kiểm tra",
     analyzingMaintenanceStatus: "Đang phân tích tình trạng bảo dưỡng...",
@@ -233,7 +235,7 @@ const translations = {
     ok: "Tốt",
     lastMaintenance: "Lần cuối",
     last: "Lần cuối",
-    distance: "Quãng đường",
+    distance: "Đã đi",
     interval: "chu kỳ",
     remaining: "còn lại",
     days: "Ngày",
@@ -269,7 +271,8 @@ const translations = {
     appVersion: "Ứng Dụng Bảo Dưỡng Xe Máy v1.0",
     appAbout: "Theo dõi bảo dưỡng xe máy với bản ghi ảnh và nhắc nhở tự động.",
     language: "Ngôn Ngữ",
-    
+    tagMustHaveName: "Nhãn bảo dưỡng phải có tên",
+    save: "Lưu",
 
     // Maintenance Tags
     oilChange: "Thay Dầu",

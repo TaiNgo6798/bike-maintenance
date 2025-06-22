@@ -1,61 +1,21 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { UserProfile } from "@/components/auth/user-profile"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Camera, Gauge, History, Settings, Bell, Wrench } from "lucide-react"
-import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useFirebase } from "@/hooks/use-firebase"
 import { useTags } from "@/hooks/use-tags"
-import { ProtectedRoute } from "@/components/auth/protected-route"
-import { UserProfile } from "@/components/auth/user-profile"
 import { MaintenanceRecord } from "@/types"
+import { Camera, Gauge, History, Settings, Wrench } from "lucide-react"
+import Link from "next/link"
 
 function HomePageContent() {
   const { t } = useLanguage()
   const { records, loading } = useFirebase()
-  const { getEnabledTagIntervals } = useTags()
-  const [overdueCount, setOverdueCount] = useState(0)
-
-  useEffect(() => {
-    // Check for overdue maintenance using Firebase tag intervals
-    const tagIntervals = getEnabledTagIntervals()
-
-    const currentKm = getCurrentKilometers(records)
-    const currentDate = new Date()
-
-    let overdue = 0
-    tagIntervals.forEach((interval) => {
-      if (!interval.enabled) return
-
-      const tagRecords = records
-        .filter((record: MaintenanceRecord) => record.tags.includes(interval.tag))
-        .sort((a: MaintenanceRecord, b: MaintenanceRecord) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-      const lastMaintenance = tagRecords[0]
-
-      if (lastMaintenance) {
-        const kmSince = currentKm - lastMaintenance.kilometers
-        const daysSince = Math.floor(
-          (currentDate.getTime() - new Date(lastMaintenance.date).getTime()) / (1000 * 60 * 60 * 24),
-        )
-
-        if (
-          (interval.kilometers && kmSince >= interval.kilometers) ||
-          (interval.days && daysSince >= interval.days)
-        ) {
-          overdue++
-        }
-      } else if (currentKm > 0) {
-        // No maintenance record for this tag - consider overdue if we have any mileage
-        overdue++
-      }
-    })
-
-    setOverdueCount(overdue)
-  }, [records, getEnabledTagIntervals])
+  const { userTags, loading: tagsLoading } = useTags()
 
   const getCurrentKilometers = (records: MaintenanceRecord[]) => {
     if (records.length === 0) return 0
@@ -94,30 +54,8 @@ function HomePageContent() {
         )}
 
         {/* Content - only show when not loading */}
-        {!loading && (
+        {!loading && !tagsLoading && (
           <>
-            {/* Overdue Maintenance Alert */}
-            {overdueCount > 0 && (
-              <Card className="border-red-200 bg-red-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Bell className="h-5 w-5 text-red-600" />
-                    <div className="flex-1">
-                      <p className="font-medium text-red-800">
-                        {t("overdueMaintenance").replace("{count}", overdueCount.toString())}
-                      </p>
-                      <p className="text-sm text-red-600">{t("checkMaintenanceStatus")}</p>
-                    </div>
-                    <Link href="/track">
-                      <Button size="sm" variant="outline" className="border-red-300 text-red-700">
-                        {t("check")}
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Current Kilometers */}
             <Card>
               <CardHeader>
@@ -168,14 +106,17 @@ function HomePageContent() {
                         <div className="text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</div>
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {record.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
+                        {record.tagIDs.map((tagID) => {
+                          const tag = userTags.find((t) => t.id === tagID)
+                          if (!tag) return null
+                          return (
+                            <Badge key={tagID} variant="secondary" className="text-xs">
+                              {tag?.name}
                           </Badge>
-                        ))}
-                        {record.tags.length > 2 && (
+                        )})}
+                        {record.tagIDs.length > 2 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{record.tags.length - 2}
+                            +{record.tagIDs.length - 2}
                           </Badge>
                         )}
                       </div>

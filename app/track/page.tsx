@@ -77,11 +77,13 @@ function TrackPageContent() {
 
       // Find the most recent maintenance for this tag
       const tagRecords = records
-        .filter((record) => record.tags.includes(interval.tag))
+        .filter((record) => record.tagIDs.includes(interval.id!))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
       const lastMaintenance = tagRecords[0]
-
+      if(!lastMaintenance) return
+      
+      
       let kmSinceLastMaintenance = 0
       let daysSinceLastMaintenance = 0
       let kmUntilDue: number | undefined
@@ -123,7 +125,7 @@ function TrackPageContent() {
       }
 
       statusList.push({
-        tag: interval.tag,
+        tag: interval.name,
         lastMaintenance,
         kmSinceLastMaintenance,
         daysSinceLastMaintenance,
@@ -332,7 +334,7 @@ function TrackPageContent() {
                                   {t("distance")}: {status.kmSinceLastMaintenance.toLocaleString()} km
                                 </span>
                                 <span>
-                                  {status.interval.kilometers.toLocaleString()} km {t("interval")}
+                                {t("interval")}: {status.interval.kilometers.toLocaleString()} km
                                 </span>
                               </div>
                               <Progress value={getProgressValue(status)} className="h-2" />
@@ -340,7 +342,7 @@ function TrackPageContent() {
                                 <div className="text-xs text-gray-500">
                                   {status.kmUntilDue > 0
                                     ? `${status.kmUntilDue.toLocaleString()} km ${t("remaining")}`
-                                    : `${Math.abs(status.kmUntilDue).toLocaleString()} km ${t("overdue")}`}
+                                    : `${t("overdue")}: ${Math.abs(status.kmUntilDue).toLocaleString()} km`}
                                 </div>
                               )}
                             </div>

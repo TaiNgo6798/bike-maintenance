@@ -123,7 +123,7 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
     return records.filter((record: MaintenanceRecord) => {
       const searchLower = searchTerm.toLowerCase()
       return (
-        record.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
+        record.tagIDs.some(tag => tag.toLowerCase().includes(searchLower)) ||
         record.notes?.toLowerCase().includes(searchLower)
       )
     })
@@ -149,7 +149,7 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
       return sortedRecords.filter((record: MaintenanceRecord) => {
         const searchLower = searchTerm.toLowerCase()
         return (
-          record.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
+          record.tagIDs.some(tag => tag.toLowerCase().includes(searchLower)) ||
           record.notes?.toLowerCase().includes(searchLower)
         )
       })
@@ -178,7 +178,7 @@ export const getTagIntervals = async (userId: string): Promise<TagInterval[]> =>
     const q = query(
       collection(db, 'tag-intervals'),
       where('userId', '==', userId),
-      orderBy('tag', 'asc')
+      orderBy('name', 'asc')
     )
     const querySnapshot = await getDocs(q)
     
@@ -203,7 +203,7 @@ export const getTagIntervals = async (userId: string): Promise<TagInterval[]> =>
       })) as TagInterval[]
       
       // Sort in JavaScript
-      return tagIntervals.sort((a, b) => a.tag.localeCompare(b.tag))
+      return tagIntervals.sort((a, b) => a.id!.localeCompare(b.id!))
     } catch (fallbackError) {
       console.error('Fallback query also failed:', fallbackError)
       throw fallbackError
@@ -228,10 +228,10 @@ export const deleteTagInterval = async (tagIntervalId: string): Promise<void> =>
 }
 
 // Get all unique tags for a user (for autocomplete/suggestions)
-export const getUserTags = async (userId: string): Promise<string[]> => {
+export const getUserTags = async (userId: string): Promise<TagInterval[]> => {
   try {
     const tagIntervals = await getTagIntervals(userId)
-    return tagIntervals.map(tagInterval => tagInterval.tag)
+    return tagIntervals
   } catch (error) {
     console.error('Error fetching user tags:', error)
     return []

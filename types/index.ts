@@ -5,7 +5,7 @@ export interface MaintenanceRecord {
     userId: string
     date: string
     kilometers: number
-    tags: string[]
+    tagIDs: string[]
     photo?: string
     notes?: string
     createdAt?: Timestamp
@@ -26,7 +26,7 @@ export interface MaintenanceStatus {
 export interface TagInterval {
     id?: string
     userId: string
-    tag: string
+    name: string
     kilometers?: number
     days?: number
     enabled: boolean

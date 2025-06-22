@@ -12,7 +12,7 @@ import { TagInterval } from '@/types'
 
 export const useTags = () => {
   const [tagIntervals, setTagIntervals] = useState<TagInterval[]>([])
-  const [userTags, setUserTags] = useState<string[]>([])
+  const [userTags, setUserTags] = useState<TagInterval[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()

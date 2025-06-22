@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/contexts/language-context"
 
 export function LanguageSwitcher() {
-  const { language, setLanguage, t } = useLanguage()
+  const { language, setLanguage } = useLanguage()
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium">{t("language")}:</span>
       <div className="flex rounded-md border">
         <Button
           variant={language === "en" ? "default" : "ghost"}

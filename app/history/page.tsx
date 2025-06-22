@@ -13,10 +13,12 @@ import { toast } from "sonner"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { MaintenanceRecord } from "@/types"
+import { useTags } from "@/hooks/use-tags"
 
 function HistoryPageContent() {
   const { t } = useLanguage()
   const { records, loading, error, deleteRecord, searchRecords } = useFirebase()
+  const { userTags } = useTags()
   const { user } = useAuth()
   const [filteredRecords, setFilteredRecords] = useState<MaintenanceRecord[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -207,11 +209,14 @@ function HistoryPageContent() {
                     <CardContent className="pt-0 space-y-3">
                       {/* Tags */}
                       <div className="flex flex-wrap gap-1">
-                        {record.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
+                        {record.tagIDs.map((tagID) => {
+                          const tag = userTags.find((t) => t.id === tagID)
+                          if (!tag) return null
+                          return (
+                            <Badge key={tagID} variant="secondary" className="text-xs">
+                              {tag?.name}
                           </Badge>
-                        ))}
+                        )})}
                       </div>
 
                       {/* Photo */}
