@@ -190,7 +190,7 @@ const translations = {
     // Home Page
     currentStatus: "Tình trạng hiện tại",
     currentKilometers: "Số km hiện tại",
-    addRecord: "Thêm đợt bảo dưỡng",
+    addRecord: "Thêm",
     checkStatus: "Kiểm tra",
     history: "Lịch sử",
     recentMaintenance: "Đợt bảo dưỡng gần đây",
@@ -202,7 +202,7 @@ const translations = {
     checkMaintenanceStatus: "Kiểm tra tình trạng bảo dưỡng",
 
     // Add Maintenance
-    addMaintenance: "Thêm đợt bảo dưỡng",
+    addMaintenance: "Thêm",
     takeOdometerPhoto: "Chụp ảnh đồng hồ km",
     takePhotoDescription: "Chụp ảnh rõ nét đồng hồ km của xe máy",
     tapToTakePhoto: "Nhấn để chụp ảnh",
