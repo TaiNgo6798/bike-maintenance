@@ -58,7 +58,7 @@ const translations = {
     // Track/Check Status
     maintenanceCheck: "Maintenance Check",
     takePhotoOdometer: "Take Photo Odometer",
-    currentOdometerReading: "Current Odometer Reading",
+    currentOdometerReading: "Current Odometer",
     takePhotoToCheck: "Take a photo of your current odometer to check maintenance status",
     takeCurrentReading: "Take Current Reading",
     orEnterManually: "Or enter manually",
@@ -87,7 +87,7 @@ const translations = {
     maintenanceHistory: "Maintenance History",
     searchByTags: "Search by tags or notes...",
     totalRecords: "Total Records",
-    latestKM: "Latest KM",
+    latestKM: "Latest Maintenance",
     noRecordsMatch: "No records match your search",
 
     // Settings
@@ -221,7 +221,7 @@ const translations = {
     // Track/Check Status
     maintenanceCheck: "Kiểm tra đợt bảo dưỡng",
     takePhotoOdometer: "Chụp ảnh đồng hồ km hiện tại",
-    currentOdometerReading: "Số km hiện tại",
+    currentOdometerReading: "Số Odo hiện tại",
     takePhotoToCheck: "Chụp ảnh đồng hồ km hiện tại để kiểm tra tình trạng bảo dưỡng",
     takeCurrentReading: "Chụp số km hiện tại",
     orEnterManually: "Hoặc nhập thủ công",
@@ -250,7 +250,7 @@ const translations = {
     maintenanceHistory: "Lịch sử bảo dưỡng",
     searchByTags: "Tìm kiếm theo nhãn hoặc ghi chú...",
     totalRecords: "Tổng bản ghi",
-    latestKM: "Km mới nhất",
+    latestKM: "Bảo dưỡng gần nhất",
     noRecordsMatch: "Không có bản ghi nào khớp với tìm kiếm",
 
     // Settings

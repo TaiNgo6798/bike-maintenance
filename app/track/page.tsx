@@ -273,12 +273,12 @@ function TrackPageContent() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t("currentReading")}</CardTitle>
+                <CardTitle>{t("currentOdometerReading")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">{Number.parseInt(currentKm).toLocaleString()}</div>
-                  <div className="text-sm text-gray-600">{t("kilometers")}</div>
+                  <div className="text-sm text-gray-600">{t("km")}</div>
                 </div>
               </CardContent>
             </Card>

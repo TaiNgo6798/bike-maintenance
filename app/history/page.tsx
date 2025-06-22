@@ -1,51 +1,30 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { ArrowLeft, Search, Calendar, MapPin, Trash2 } from "lucide-react"
-import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import { useFirebase } from "@/hooks/use-firebase"
-import { toast } from "sonner"
-import { ProtectedRoute } from "@/components/auth/protected-route"
-import { useAuth } from "@/contexts/auth-context"
-import { MaintenanceRecord } from "@/types"
 import { useTags } from "@/hooks/use-tags"
+import { MaintenanceRecord } from "@/types"
+import { ArrowLeft, Calendar, MapPin, Trash2 } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 function HistoryPageContent() {
   const { t } = useLanguage()
-  const { records, loading, error, deleteRecord, searchRecords } = useFirebase()
-  const { userTags } = useTags()
+  const { records, loading, error, deleteRecord } = useFirebase()
+  const { userTags, loading: tagsLoading } = useTags()
   const { user } = useAuth()
   const [filteredRecords, setFilteredRecords] = useState<MaintenanceRecord[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [searchLoading, setSearchLoading] = useState(false)
 
   useEffect(() => {
     setFilteredRecords(records)
   }, [records])
 
-  useEffect(() => {
-    const handleSearch = async () => {
-      if (searchTerm.trim()) {
-        setSearchLoading(true)
-        try {
-          await searchRecords(searchTerm)
-        } finally {
-          setSearchLoading(false)
-        }
-      } else {
-        // Reset to all records when search is cleared
-        setFilteredRecords(records)
-      }
-    }
-
-    const timeoutId = setTimeout(handleSearch, 300) // Debounce search
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm, searchRecords, records])
 
   const handleDeleteRecord = async (record: MaintenanceRecord) => {
     if (!record.id) return
@@ -120,7 +99,7 @@ function HistoryPageContent() {
         )}
 
         {/* Search */}
-        <div className="relative">
+        {/* <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder={t("searchByTags")}
@@ -133,7 +112,7 @@ function HistoryPageContent() {
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Statistics */}
         <div className="grid grid-cols-2 gap-4">
@@ -164,12 +143,12 @@ function HistoryPageContent() {
         )}
 
         {/* Records List */}
-        {!loading && (
+        {!loading && !tagsLoading && (
           <div className="space-y-4">
             {filteredRecords.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center text-gray-500">
-                  {searchTerm ? t("noRecordsMatch") : t("noRecordsYet")}
+                  {t("noRecordsYet")}
                 </CardContent>
               </Card>
             ) : (
