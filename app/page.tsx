@@ -4,37 +4,30 @@ import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Camera, History, Settings, Bell, Wrench, Gauge } from "lucide-react"
+import { Camera, Gauge, History, Settings, Bell, Wrench } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useFirebase } from "@/hooks/use-firebase"
-import { MaintenanceRecord } from "@/lib/firebase-services"
-import { toast } from "sonner"
+import { useTags } from "@/hooks/use-tags"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { UserProfile } from "@/components/auth/user-profile"
+import { MaintenanceRecord } from "@/types"
 
 function HomePageContent() {
   const { t } = useLanguage()
-  const { records, loading, error } = useFirebase()
+  const { records, loading } = useFirebase()
+  const { getEnabledTagIntervals } = useTags()
   const [overdueCount, setOverdueCount] = useState(0)
 
   useEffect(() => {
-    // Check for overdue maintenance using tag intervals
-    const tagIntervals = [
-      { tag: "Oil Change", kilometers: 3000, days: 90, enabled: true },
-      { tag: "Air Filter", kilometers: 6000, days: 180, enabled: true },
-      { tag: "Spark Plug", kilometers: 8000, days: 365, enabled: true },
-      { tag: "Chain Cleaning", kilometers: 1000, days: 30, enabled: true },
-      { tag: "Brake Pads", kilometers: 15000, days: 730, enabled: true },
-      { tag: "Tire Check", kilometers: 5000, days: 180, enabled: true },
-      { tag: "Battery Check", kilometers: 10000, days: 365, enabled: true },
-    ]
+    // Check for overdue maintenance using Firebase tag intervals
+    const tagIntervals = getEnabledTagIntervals()
 
     const currentKm = getCurrentKilometers(records)
     const currentDate = new Date()
 
     let overdue = 0
-    tagIntervals.forEach((interval: any) => {
+    tagIntervals.forEach((interval) => {
       if (!interval.enabled) return
 
       const tagRecords = records
@@ -62,7 +55,7 @@ function HomePageContent() {
     })
 
     setOverdueCount(overdue)
-  }, [records])
+  }, [records, getEnabledTagIntervals])
 
   const getCurrentKilometers = (records: MaintenanceRecord[]) => {
     if (records.length === 0) return 0
@@ -70,17 +63,10 @@ function HomePageContent() {
   }
 
   const getRecentRecords = () => {
-    return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3)
+    return records
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3)
   }
-
-  const currentKm = getCurrentKilometers(records)
-
-  // Show error toast if there's an error
-  useEffect(() => {
-    if (error) {
-      toast.error(error)
-    }
-  }, [error])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -89,113 +75,125 @@ function HomePageContent() {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Wrench className="h-8 w-8 text-blue-600" />
+              <Wrench className="h-8 w-8" />
               <h1 className="text-2xl font-bold">{t("appName")}</h1>
             </div>
             <UserProfile />
           </div>
-          <p className="text-gray-600">{t("appDescription")}</p>
+          <p className="text-gray-600 text-left">{t("appDescription")}</p>
         </div>
 
-        {/* Current Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              {t("currentStatus")}
-              {overdueCount > 0 && (
-                <Badge variant="destructive" className="flex items-center gap-1">
-                  <Bell className="h-3 w-3" />
-                  {overdueCount} {t("due")}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{currentKm.toLocaleString()}</div>
-              <div className="text-sm text-gray-600">{t("currentKilometers")}</div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Loading State */}
+        {loading && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">{t("loading") || "Loading..."}</p>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-3">
-          <Link href="/add-maintenance">
-            <Button className="w-full h-20 flex flex-col gap-2">
-              <Camera className="h-5 w-5" />
-              <span className="text-xs">{t("addRecord")}</span>
-            </Button>
-          </Link>
-          <Link href="/track">
-            <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
-              <Gauge className="h-5 w-5" />
-              <span className="text-xs">{t("checkStatus")}</span>
-            </Button>
-          </Link>
-          <Link href="/history">
-            <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
-              <History className="h-5 w-5" />
-              <span className="text-xs">{t("history")}</span>
-            </Button>
-          </Link>
-        </div>
+        {/* Content - only show when not loading */}
+        {!loading && (
+          <>
+            {/* Overdue Maintenance Alert */}
+            {overdueCount > 0 && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Bell className="h-5 w-5 text-red-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-red-800">
+                        {t("overdueMaintenance").replace("{count}", overdueCount.toString())}
+                      </p>
+                      <p className="text-sm text-red-600">{t("checkMaintenanceStatus")}</p>
+                    </div>
+                    <Link href="/track">
+                      <Button size="sm" variant="outline" className="border-red-300 text-red-700">
+                        {t("check")}
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Recent Records */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              {t("recentMaintenance")}
-              <Link href="/history">
-                <Button variant="ghost" size="sm">
-                  {t("viewAll")}
+            {/* Current Kilometers */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("currentKilometers")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-center">
+                  {getCurrentKilometers(records).toLocaleString()} km
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-3">
+              <Link href="/add-maintenance">
+                <Button className="w-full h-20 flex flex-col gap-2">
+                  <Camera className="h-5 w-5" />
+                  <span className="text-xs">{t("addRecord")}</span>
                 </Button>
               </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">{t("loadingRecords")}</p>
-              </div>
-            ) : getRecentRecords().length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Wrench className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>{t("noRecordsYet")}</p>
-                <p className="text-sm">{t("addFirstRecord")}</p>
-              </div>
-            ) : (
-              getRecentRecords().map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <div className="font-medium">{record.kilometers.toLocaleString()} km</div>
-                    <div className="text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</div>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {record.tags.slice(0, 2).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {record.tags.length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{record.tags.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+              <Link href="/track">
+                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                  <Gauge className="h-5 w-5" />
+                  <span className="text-xs">{t("checkStatus")}</span>
+                </Button>
+              </Link>
+              <Link href="/history">
+                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                  <History className="h-5 w-5" />
+                  <span className="text-xs">{t("history")}</span>
+                </Button>
+              </Link>
+            </div>
 
-        {/* Settings Link */}
-        <Link href="/settings">
-          <Button variant="outline" className="w-full flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            {t("settingsIntervals")}
-          </Button>
-        </Link>
+            {/* Recent Records */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("recentMaintenance")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {getRecentRecords().length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">{t("noRecordsYet")}</p>
+                ) : (
+                  getRecentRecords().map((record) => (
+                    <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">{record.kilometers.toLocaleString()} km</div>
+                        <div className="text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {record.tags.slice(0, 2).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {record.tags.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{record.tags.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Settings Link */}
+            <Link href="/settings">
+              <Button variant="outline" className="w-full flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                {t("settingsIntervals")}
+              </Button>
+            </Link>
+          </>
+        )}
       </div>
     </div>
   )

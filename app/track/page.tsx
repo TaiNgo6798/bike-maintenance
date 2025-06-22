@@ -1,91 +1,73 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Camera, ArrowLeft, AlertTriangle, CheckCircle, Clock } from "lucide-react"
-import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
-import { MaintenanceRecord } from "@/lib/firebase-services"
-import { ProtectedRoute } from "@/components/auth/protected-route"
-
-interface TagInterval {
-  tag: string
-  kilometers?: number
-  days?: number
-  enabled: boolean
-}
-
-interface MaintenanceStatus {
-  tag: string
-  lastMaintenance?: MaintenanceRecord
-  kmSinceLastMaintenance: number
-  daysSinceLastMaintenance: number
-  kmUntilDue?: number
-  daysUntilDue?: number
-  status: "overdue" | "due-soon" | "ok"
-  interval: TagInterval
-}
+import { useFirebase } from "@/hooks/use-firebase"
+import { useTags } from "@/hooks/use-tags"
+import { MaintenanceStatus } from "@/types"
+import { AlertTriangle, ArrowLeft, Camera, CheckCircle, Clock } from "lucide-react"
+import Link from "next/link"
+import React, { useRef, useState } from "react"
+import { toast } from "sonner"
 
 function TrackPageContent() {
   const { t } = useLanguage()
+  const { records } = useFirebase()
+  const { getEnabledTagIntervals } = useTags()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
   const [currentKm, setCurrentKm] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [maintenanceStatus, setMaintenanceStatus] = useState<MaintenanceStatus[]>([])
-  const [tagIntervals, setTagIntervals] = useState<TagInterval[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Update DEFAULT_TAG_INTERVALS to use translations:
-  const DEFAULT_TAG_INTERVALS: TagInterval[] = [
-    { tag: t("oilChange"), kilometers: 3000, days: 90, enabled: true },
-    { tag: t("airFilter"), kilometers: 6000, days: 180, enabled: true },
-    { tag: t("sparkPlug"), kilometers: 8000, days: 365, enabled: true },
-    { tag: t("chainCleaning"), kilometers: 1000, days: 30, enabled: true },
-    { tag: t("brakePads"), kilometers: 15000, days: 730, enabled: true },
-    { tag: t("tireCheck"), kilometers: 5000, days: 180, enabled: true },
-    { tag: t("batteryCheck"), kilometers: 10000, days: 365, enabled: true },
-  ]
-
-  useEffect(() => {
-    // Load tag intervals from localStorage
-    const savedIntervals = localStorage.getItem("tag-intervals")
-    if (savedIntervals) {
-      setTagIntervals(JSON.parse(savedIntervals))
-    } else {
-      setTagIntervals(DEFAULT_TAG_INTERVALS)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
         setPhoto(e.target?.result as string)
         setIsProcessing(true)
-
-        // Simulate OCR processing
-        setTimeout(() => {
-          // Simulate detected kilometers
-          const detectedKm = Math.floor(Math.random() * 40000) + 15000
-          setCurrentKm(detectedKm.toString())
-          setIsProcessing(false)
-          analyzeMaintenanceStatus(detectedKm)
-        }, 2000)
       }
       reader.readAsDataURL(file)
+
+      // Call the ODO detection API
+      try {
+        const formData = new FormData()
+        formData.append('image', file)
+
+        const response = await fetch('/api/odo-detect', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const err = await response.json();
+          toast.error(err.error);
+        }
+
+        const { odo } = await response.json()
+        
+        // Set the detected kilometers
+        setCurrentKm(odo)
+        analyzeMaintenanceStatus(Number.parseInt(odo))
+      } catch (error) {
+        console.error('Error detecting ODO:', error)
+        toast.error(t("failedToDetectODO"))
+      } finally {
+        setIsProcessing(false)
+      }
     }
   }
 
   const analyzeMaintenanceStatus = (currentKilometers: number) => {
-    const records: MaintenanceRecord[] = JSON.parse(localStorage.getItem("maintenance-records") || "[]")
+    const tagIntervals = getEnabledTagIntervals()
     const currentDate = new Date()
 
     const statusList: MaintenanceStatus[] = []
@@ -302,76 +284,90 @@ function TrackPageContent() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">{t("maintenanceStatus")}</h2>
 
-              {maintenanceStatus.map((status) => (
-                <Card key={status.tag} className={`border-2 ${getStatusColor(status.status)}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(status.status)}
-                        <span className="font-medium">{status.tag}</span>
-                      </div>
-                      <Badge
-                        variant={
-                          status.status === "overdue"
-                            ? "destructive"
-                            : status.status === "due-soon"
-                              ? "default"
-                              : "secondary"
-                        }
-                      >
-                        {getStatusText(status.status)}
-                      </Badge>
-                    </div>
-
-                    {status.lastMaintenance ? (
-                      <div className="space-y-2">
-                        <div className="text-sm text-gray-600">
-                          {t("last")}: {status.lastMaintenance.kilometers.toLocaleString()} km (
-                          {formatDate(status.lastMaintenance.date)})
-                        </div>
-
-                        {status.interval.kilometers && (
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>
-                                {t("distance")}: {status.kmSinceLastMaintenance.toLocaleString()} km
-                              </span>
-                              <span>
-                                {status.interval.kilometers.toLocaleString()} km {t("interval")}
-                              </span>
-                            </div>
-                            <Progress value={getProgressValue(status)} className="h-2" />
-                            {status.kmUntilDue !== undefined && (
-                              <div className="text-xs text-gray-500">
-                                {status.kmUntilDue > 0
-                                  ? `${status.kmUntilDue.toLocaleString()} km ${t("remaining")}`
-                                  : `${Math.abs(status.kmUntilDue).toLocaleString()} km ${t("overdue")}`}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {status.interval.days && (
-                          <div className="text-sm text-gray-600">
-                            {t("days")}: {status.daysSinceLastMaintenance} / {status.interval.days}
-                            {status.daysUntilDue !== undefined && (
-                              <span className="ml-2">
-                                (
-                                {status.daysUntilDue > 0
-                                  ? `${status.daysUntilDue} ${t("daysLeft")}`
-                                  : `${Math.abs(status.daysUntilDue)} ${t("daysOverdue")}`}
-                                )
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-600">{t("noPreviousMaintenance")}</div>
-                    )}
+              {maintenanceStatus.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center text-gray-500">
+                    <p>{t("noTagsConfigured")}</p>
+                    <p className="text-sm mt-2">{t("configureTagsInSettings")}</p>
+                    <Link href="/settings">
+                      <Button variant="outline" className="mt-4">
+                        {t("goToSettings")}
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                maintenanceStatus.map((status) => (
+                  <Card key={status.tag} className={`border-2 ${getStatusColor(status.status)}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(status.status)}
+                          <span className="font-medium">{status.tag}</span>
+                        </div>
+                        <Badge
+                          variant={
+                            status.status === "overdue"
+                              ? "destructive"
+                              : status.status === "due-soon"
+                                ? "default"
+                                : "secondary"
+                          }
+                        >
+                          {getStatusText(status.status)}
+                        </Badge>
+                      </div>
+
+                      {status.lastMaintenance ? (
+                        <div className="space-y-2">
+                          <div className="text-sm text-gray-600">
+                            {t("last")}: {status.lastMaintenance.kilometers.toLocaleString()} km (
+                            {formatDate(status.lastMaintenance.date)})
+                          </div>
+
+                          {status.interval.kilometers && (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span>
+                                  {t("distance")}: {status.kmSinceLastMaintenance.toLocaleString()} km
+                                </span>
+                                <span>
+                                  {status.interval.kilometers.toLocaleString()} km {t("interval")}
+                                </span>
+                              </div>
+                              <Progress value={getProgressValue(status)} className="h-2" />
+                              {status.kmUntilDue !== undefined && (
+                                <div className="text-xs text-gray-500">
+                                  {status.kmUntilDue > 0
+                                    ? `${status.kmUntilDue.toLocaleString()} km ${t("remaining")}`
+                                    : `${Math.abs(status.kmUntilDue).toLocaleString()} km ${t("overdue")}`}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {status.interval.days && (
+                            <div className="text-sm text-gray-600">
+                              {t("days")}: {status.daysSinceLastMaintenance} / {status.interval.days}
+                              {status.daysUntilDue !== undefined && (
+                                <span className="ml-2">
+                                  (
+                                  {status.daysUntilDue > 0
+                                    ? `${status.daysUntilDue} ${t("daysLeft")}`
+                                    : `${Math.abs(status.daysUntilDue)} ${t("daysOverdue")}`}
+                                  )
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-600">{t("noPreviousMaintenance")}</div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
 
             <div className="flex gap-4">

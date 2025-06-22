@@ -12,18 +12,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
-
-export interface MaintenanceRecord {
-  id?: string
-  userId: string
-  date: string
-  kilometers: number
-  tags: string[]
-  photo?: string
-  notes?: string
-  createdAt?: Timestamp
-  updatedAt?: Timestamp
-}
+import { MaintenanceRecord, TagInterval } from '@/types'
 
 // Upload image to Firebase Storage
 export const uploadImage = async (file: File, recordId: string): Promise<string> => {
@@ -168,5 +157,83 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
       console.error('Fallback search query also failed:', fallbackError)
       throw fallbackError
     }
+  }
+}
+
+// Tag Management Functions
+
+// Add a new tag interval
+export const addTagInterval = async (tagInterval: Omit<TagInterval, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const docRef = await addDoc(collection(db, 'tag-intervals'), {
+    ...tagInterval,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  })
+  return docRef.id
+}
+
+// Get all tag intervals for a specific user
+export const getTagIntervals = async (userId: string): Promise<TagInterval[]> => {
+  try {
+    const q = query(
+      collection(db, 'tag-intervals'),
+      where('userId', '==', userId),
+      orderBy('tag', 'asc')
+    )
+    const querySnapshot = await getDocs(q)
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as TagInterval[]
+  } catch (error: any) {
+    console.error('Error fetching tag intervals:', error)
+    
+    // Fallback: query without orderBy
+    try {
+      const fallbackQuery = query(
+        collection(db, 'tag-intervals'),
+        where('userId', '==', userId)
+      )
+      const querySnapshot = await getDocs(fallbackQuery)
+      
+      const tagIntervals = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as TagInterval[]
+      
+      // Sort in JavaScript
+      return tagIntervals.sort((a, b) => a.tag.localeCompare(b.tag))
+    } catch (fallbackError) {
+      console.error('Fallback query also failed:', fallbackError)
+      throw fallbackError
+    }
+  }
+}
+
+// Update a tag interval
+export const updateTagInterval = async (
+  tagIntervalId: string,
+  updates: Partial<Omit<TagInterval, 'id' | 'createdAt' | 'userId'>>
+): Promise<void> => {
+  await updateDoc(doc(db, 'tag-intervals', tagIntervalId), {
+    ...updates,
+    updatedAt: Timestamp.now(),
+  })
+}
+
+// Delete a tag interval
+export const deleteTagInterval = async (tagIntervalId: string): Promise<void> => {
+  await deleteDoc(doc(db, 'tag-intervals', tagIntervalId))
+}
+
+// Get all unique tags for a user (for autocomplete/suggestions)
+export const getUserTags = async (userId: string): Promise<string[]> => {
+  try {
+    const tagIntervals = await getTagIntervals(userId)
+    return tagIntervals.map(tagInterval => tagInterval.tag)
+  } catch (error) {
+    console.error('Error fetching user tags:', error)
+    return []
   }
 } 

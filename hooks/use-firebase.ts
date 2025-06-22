@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  MaintenanceRecord,
   addMaintenanceRecord,
   getMaintenanceRecords,
   deleteMaintenanceRecord,
@@ -9,6 +8,8 @@ import {
   uploadImage,
 } from '@/lib/firebase-services'
 import { useAuth } from '@/contexts/auth-context'
+import { cleanUndefinedValues } from '@/lib/utils'
+import { MaintenanceRecord } from '@/types'
 
 export const useFirebase = () => {
   const [records, setRecords] = useState<MaintenanceRecord[]>([])
@@ -44,8 +45,9 @@ export const useFirebase = () => {
     setLoading(true)
     setError(null)
     try {
+      const cleanedRecord = cleanUndefinedValues(record)
       const recordWithUserId = {
-        ...record,
+        ...cleanedRecord,
         userId: user.uid,
       }
       const recordId = await addMaintenanceRecord(recordWithUserId)
@@ -87,7 +89,8 @@ export const useFirebase = () => {
     setLoading(true)
     setError(null)
     try {
-      await updateMaintenanceRecord(recordId, updates)
+      const cleanedUpdates = cleanUndefinedValues(updates)
+      await updateMaintenanceRecord(recordId, cleanedUpdates)
       await loadRecords()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update record')

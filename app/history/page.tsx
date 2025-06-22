@@ -10,9 +10,9 @@ import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { useFirebase } from "@/hooks/use-firebase"
 import { toast } from "sonner"
-import { MaintenanceRecord } from "@/lib/firebase-services"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { useAuth } from "@/contexts/auth-context"
+import { MaintenanceRecord } from "@/types"
 
 function HistoryPageContent() {
   const { t } = useLanguage()
@@ -89,15 +89,6 @@ function HistoryPageContent() {
       toast.error(error)
     }
   }, [error])
-
-  // Debug information
-  console.log('History Page Debug:', {
-    user: user?.uid,
-    recordsCount: records.length,
-    loading,
-    error,
-    records: records.slice(0, 2) // Show first 2 records for debugging
-  })
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">

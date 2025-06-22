@@ -1,76 +1,78 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Bell, Trash2, Plus, X } from "lucide-react"
-import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
-import { LanguageSwitcher } from "@/components/language-switcher"
-import { ProtectedRoute } from "@/components/auth/protected-route"
-
-interface TagInterval {
-  tag: string
-  kilometers?: number
-  days?: number
-  enabled: boolean
-}
+import { useTags } from "@/hooks/use-tags"
+import { ArrowLeft, Bell, Cloud, Plus, Trash2, X } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import { TagInterval } from "@/types"
 
 function SettingsPageContent() {
   const { t } = useLanguage()
-
-  const DEFAULT_TAG_INTERVALS: TagInterval[] = [
-    { tag: t("oilChange"), kilometers: 3000, days: 90, enabled: true },
-    { tag: t("airFilter"), kilometers: 6000, days: 180, enabled: true },
-  ]
-
-  const [tagIntervals, setTagIntervals] = useState<TagInterval[]>(DEFAULT_TAG_INTERVALS)
+  const { tagIntervals, loading, error, addTag, updateTag, deleteTag } = useTags()
   const [notifications, setNotifications] = useState(true)
   const [newTagName, setNewTagName] = useState("")
 
   useEffect(() => {
-    const savedIntervals = localStorage.getItem("tag-intervals")
-    if (savedIntervals) {
-      setTagIntervals(JSON.parse(savedIntervals))
-    }
-
     const savedNotifications = localStorage.getItem("notifications-enabled")
     if (savedNotifications) {
       setNotifications(JSON.parse(savedNotifications))
     }
   }, [])
 
-  const updateTagInterval = (index: number, field: keyof TagInterval, value: any) => {
-    const updated = [...tagIntervals]
-    updated[index] = { ...updated[index], [field]: value }
-    setTagIntervals(updated)
-    localStorage.setItem("tag-intervals", JSON.stringify(updated))
-  }
+  const updateTagInterval = async (index: number, field: keyof TagInterval, value: any) => {
+    const tagInterval = tagIntervals[index]
+    if (!tagInterval?.id) return
 
-  const addNewTag = () => {
-    if (newTagName.trim() && !tagIntervals.find((t) => t.tag === newTagName.trim())) {
-      const newTag: TagInterval = {
-        tag: newTagName.trim(),
-        kilometers: 5000,
-        days: 180,
-        enabled: true,
-      }
-      const updated = [...tagIntervals, newTag]
-      setTagIntervals(updated)
-      localStorage.setItem("tag-intervals", JSON.stringify(updated))
-      setNewTagName("")
+    try {
+      await updateTag(tagInterval.id, { [field]: value })
+      toast.success(t("tagUpdatedSuccessfully"))
+    } catch (err) {
+      toast.error(t("failedToUpdateTag"))
+      console.error("Error updating tag:", err)
     }
   }
 
-  const removeTag = (index: number) => {
-    if (confirm(t("confirmRemoveTag").replace("{tag}", tagIntervals[index].tag))) {
-      const updated = tagIntervals.filter((_, i) => i !== index)
-      setTagIntervals(updated)
-      localStorage.setItem("tag-intervals", JSON.stringify(updated))
+  const addNewTag = async () => {
+    if (newTagName.trim() && !tagIntervals.find((t) => t.tag === newTagName.trim())) {
+      try {
+        const newTag: Omit<TagInterval, 'id' | 'createdAt' | 'updatedAt' | 'userId'> = {
+          tag: newTagName.trim(),
+          kilometers: 5000,
+          days: 180,
+          enabled: true,
+        }
+        await addTag(newTag)
+        setNewTagName("")
+        toast.success(t("tagAddedSuccessfully"))
+      } catch (err) {
+        toast.error(t("failedToAddTag"))
+        console.error("Error adding tag:", err)
+      }
+    }
+  }
+
+  const removeTag = async (index: number) => {
+    const tagInterval = tagIntervals[index]
+    if (!tagInterval?.id) return
+
+    if (confirm(t("confirmRemoveTag").replace("{tag}", tagInterval.tag))) {
+      try {
+        await deleteTag(tagInterval.id)
+        toast.success(t("tagRemovedSuccessfully"))
+      } catch (err) {
+        toast.error(t("failedToRemoveTag"))
+        console.error("Error removing tag:", err)
+      }
     }
   }
 
@@ -81,12 +83,17 @@ function SettingsPageContent() {
 
   const clearAllData = () => {
     if (confirm(t("confirmClearData"))) {
-      localStorage.removeItem("maintenance-records")
-      localStorage.removeItem("tag-intervals")
       localStorage.removeItem("notifications-enabled")
-      alert(t("dataClearedSuccess"))
+      toast.success(t("dataClearedSuccess"))
     }
   }
+
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -108,7 +115,6 @@ function SettingsPageContent() {
               <Bell className="h-5 w-5" />
               {t("notifications")}
             </CardTitle>
-            <CardDescription>{t("getNotified")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -122,7 +128,6 @@ function SettingsPageContent() {
         <Card>
           <CardHeader>
             <CardTitle>{t("language")}</CardTitle>
-            <CardDescription>{t("chooseLanguage")}</CardDescription>
           </CardHeader>
           <CardContent>
             <LanguageSwitcher />
@@ -132,8 +137,10 @@ function SettingsPageContent() {
         {/* Maintenance Tags & Intervals */}
         <Card>
           <CardHeader>
-            <CardTitle>{t("maintenanceTagsIntervals")}</CardTitle>
-            <CardDescription>{t("configureMaintenanceTags")}</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Cloud className="h-5 w-5" />
+              {t("maintenanceTagsIntervals")}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Add New Tag */}
@@ -143,32 +150,41 @@ function SettingsPageContent() {
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addNewTag()}
+                disabled={loading}
               />
-              <Button onClick={addNewTag} size="icon" variant="outline">
+              <Button onClick={addNewTag} size="icon" variant="outline" disabled={loading}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
 
+            {/* Loading state */}
+            {loading && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-sm text-gray-600 mt-2">{t("loading")}</p>
+              </div>
+            )}
+
             {/* Existing Tags */}
-            {tagIntervals.map((tagInterval, index) => (
-              <div key={tagInterval.tag} className="space-y-3 p-4 border rounded-lg">
+            {!loading && tagIntervals.map((tagInterval, index) => (
+              <div key={tagInterval.id || index} className="space-y-3 p-4 border rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{tagInterval.tag}</Badge>
-                    {index >= DEFAULT_TAG_INTERVALS.length && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-red-500"
-                        onClick={() => removeTag(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-red-500"
+                      onClick={() => removeTag(index)}
+                      disabled={loading}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
                   <Switch
                     checked={tagInterval.enabled}
                     onCheckedChange={(enabled) => updateTagInterval(index, "enabled", enabled)}
+                    disabled={loading}
                   />
                 </div>
 
@@ -183,6 +199,7 @@ function SettingsPageContent() {
                           updateTagInterval(index, "kilometers", Number.parseInt(e.target.value) || undefined)
                         }
                         placeholder="e.g., 3000"
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -192,12 +209,21 @@ function SettingsPageContent() {
                         value={tagInterval.days || ""}
                         onChange={(e) => updateTagInterval(index, "days", Number.parseInt(e.target.value) || undefined)}
                         placeholder="e.g., 90"
+                        disabled={loading}
                       />
                     </div>
                   </div>
                 )}
               </div>
             ))}
+
+            {/* Empty state */}
+            {!loading && tagIntervals.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>{t("noTagsYet")}</p>
+                <p className="text-sm">{t("addYourFirstTag")}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -205,24 +231,12 @@ function SettingsPageContent() {
         <Card>
           <CardHeader>
             <CardTitle className="text-red-600">{t("dataManagement")}</CardTitle>
-            <CardDescription>{t("manageMaintenanceData")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="destructive" onClick={clearAllData} className="w-full flex items-center gap-2">
               <Trash2 className="h-4 w-4" />
               {t("clearAllData")}
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* App Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("about")}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-gray-600 space-y-2">
-            <p>Bike Maintenance Tracker v1.0</p>
-            <p>{t("keepTrackMotorcycle")}</p>
           </CardContent>
         </Card>
       </div>
@@ -237,3 +251,4 @@ export default function SettingsPage() {
     </ProtectedRoute>
   )
 }
+

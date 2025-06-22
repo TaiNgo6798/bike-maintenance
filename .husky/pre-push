@@ -1,1 +1,1 @@
-pnpm lint --fix && pnpm build 
+npm run lint --fix && npm run build 

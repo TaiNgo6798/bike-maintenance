@@ -8,6 +8,7 @@ A comprehensive bike maintenance tracking app built with Next.js, TypeScript, an
 - 🔐 **Google Authentication**: Simple and secure sign-in with Google accounts
 - 📸 **Photo Capture**: Take photos of your odometer and maintenance work
 - 📊 **Maintenance Tracking**: Record maintenance activities with tags and notes
+- 🏷️ **Cloud Tag Management**: Store and sync maintenance tags across devices
 - 🔍 **Search & Filter**: Search through your maintenance history
 - 📱 **PWA Support**: Install as a progressive web app
 - 🌐 **Multi-language**: Support for multiple languages
@@ -80,6 +81,9 @@ service cloud.firestore {
     match /maintenance-records/{document} {
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+    match /tag-intervals/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
   }
 }
 ```
@@ -98,19 +102,43 @@ service firebase.storage {
 
 ### 8. Firestore Indexes (Optional but Recommended)
 
-For optimal performance, create a composite index in Firestore:
+For optimal performance, create composite indexes in Firestore:
 
 1. Go to your Firebase Console → Firestore Database
 2. Click on the "Indexes" tab
 3. Click "Create Index"
-4. Set up the following index:
-   - **Collection ID**: `maintenance-records`
-   - **Fields to index**:
-     - `userId` (Ascending)
-     - `date` (Descending)
-   - **Query scope**: Collection
+4. Set up the following indexes:
 
-This index will improve query performance for user-specific maintenance records. The app includes fallback logic if the index isn't created, but performance will be better with the index.
+**Maintenance Records Index:**
+- **Collection ID**: `maintenance-records`
+- **Fields to index**:
+  - `userId` (Ascending)
+  - `date` (Descending)
+- **Query scope**: Collection
+
+**Tag Intervals Index:**
+- **Collection ID**: `tag-intervals`
+- **Fields to index**:
+  - `userId` (Ascending)
+  - `tag` (Ascending)
+- **Query scope**: Collection
+
+These indexes will improve query performance for user-specific data. The app includes fallback logic if the indexes aren't created, but performance will be better with the indexes.
+
+## Tag Management
+
+The app supports cloud-based tag management with the following features:
+
+### Cloud Storage
+- Tags are stored in Firebase Firestore
+- Automatic sync across devices
+- User-specific tag isolation
+
+### Tag Features
+- Create custom maintenance tags
+- Set kilometer and time intervals
+- Enable/disable tags for maintenance reminders
+- Tag suggestions in maintenance forms
 
 ## Development
 
@@ -126,29 +154,45 @@ cp env.example .env.local
 pnpm dev
 ```
 
-## Authentication Features
+## Data Structure
 
-The app uses Google authentication for a simple and secure user experience:
+### Maintenance Records
+```typescript
+interface MaintenanceRecord {
+  id?: string
+  userId: string
+  date: string
+  kilometers: number
+  tags: string[]
+  photo?: string
+  notes?: string
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+```
 
-- **Google Sign-In**: One-click authentication with Google accounts
-- **Automatic Account Creation**: New users are automatically created on first sign-in
-- **User Profile**: Display user information from Google profile
-- **Protected Routes**: All maintenance features require authentication
-- **User-Specific Data**: Each user only sees their own maintenance records
-- **Secure Sign Out**: Easy sign out functionality
+### Tag Intervals
+```typescript
+interface TagInterval {
+  id?: string
+  userId: string
+  tag: string
+  kilometers?: number
+  days?: number
+  enabled: boolean
+  createdAt?: Timestamp
+  updatedAt?: Timestamp
+}
+```
 
-## Deployment
+## Contributing
 
-Your project is live at:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-**[https://vercel.com/taingo6798s-projects/v0-oil-change-app-features](https://vercel.com/taingo6798s-projects/v0-oil-change-app-features)**
+## License
 
-## Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui components
-- **Backend**: Firebase Firestore, Firebase Storage, Firebase Authentication
-- **PWA**: Next.js PWA plugin
-- **State Management**: React hooks with custom Firebase hook
-- **Notifications**: Sonner toast notifications
-- **Authentication**: Firebase Auth with Google sign-in
+This project is licensed under the MIT License.
