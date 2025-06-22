@@ -1,8 +1,7 @@
 'use client'
 
-import { useAuth } from '@/contexts/auth-context'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context'
 import { LogOut } from 'lucide-react'
 
 export const UserProfile: React.FC = () => {
   const { user, signOut } = useAuth()
+  const { t } = useLanguage()
 
   if (!user) {
     return null
@@ -43,6 +45,7 @@ export const UserProfile: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
+            <AvatarImage src={user.photoURL || ''} />
             <AvatarFallback>
               {getInitials(user.displayName)}
             </AvatarFallback>
@@ -63,7 +66,7 @@ export const UserProfile: React.FC = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
+          <span>{t("signOut")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

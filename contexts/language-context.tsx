@@ -176,6 +176,9 @@ const translations = {
     oct: "Oct",
     nov: "Nov",
     dec: "Dec",
+
+    // Auth
+    signOut: "Sign Out",
   },
   vi: {
     // App Name
@@ -339,6 +342,9 @@ const translations = {
     oct: "Th10",
     nov: "Th11",
     dec: "Th12",
+
+    // Auth
+    signOut: "Đăng xuất",
   },
 }
 

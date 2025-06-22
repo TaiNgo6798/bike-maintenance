@@ -40,7 +40,6 @@ function HomePageContent() {
             </div>
             <UserProfile />
           </div>
-          <p className="text-gray-600 text-left">{t("appDescription")}</p>
         </div>
 
         {/* Loading State */}
@@ -62,7 +61,7 @@ function HomePageContent() {
                 <CardTitle className="text-lg text-center">{t("latestKM")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-center">
+                <div className="text-3xl font-bold text-center text-blue-600">
                   {getCurrentKilometers(records).toLocaleString()} km
                 </div>
               </CardContent>
@@ -93,7 +92,7 @@ function HomePageContent() {
             {/* Recent Records */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("recentMaintenance")}</CardTitle>
+                <CardTitle className="text-lg text-center">{t("recentMaintenance")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {getRecentRecords().length === 0 ? (
