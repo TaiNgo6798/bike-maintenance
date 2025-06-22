@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,15 +10,8 @@ import { Progress } from "@/components/ui/progress"
 import { Camera, ArrowLeft, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
-
-interface MaintenanceRecord {
-  id: string
-  date: string
-  kilometers: number
-  tags: string[]
-  photo?: string
-  notes?: string
-}
+import { MaintenanceRecord } from "@/lib/firebase-services"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
 interface TagInterval {
   tag: string
@@ -40,7 +31,7 @@ interface MaintenanceStatus {
   interval: TagInterval
 }
 
-export default function TrackPage() {
+function TrackPageContent() {
   const { t } = useLanguage()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
@@ -395,5 +386,13 @@ export default function TrackPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TrackPage() {
+  return (
+    <ProtectedRoute>
+      <TrackPageContent />
+    </ProtectedRoute>
   )
 }

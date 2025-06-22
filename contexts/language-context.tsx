@@ -56,6 +56,7 @@ const translations = {
 
     // Track/Check Status
     maintenanceCheck: "Maintenance Check",
+    takePhotoOdometer: "Take Photo Odometer",
     currentOdometerReading: "Current Odometer Reading",
     takePhotoToCheck: "Take a photo of your current odometer to check maintenance status",
     takeCurrentReading: "Take Current Reading",
@@ -118,6 +119,20 @@ const translations = {
     confirmRemoveTag: 'Remove "{tag}" tag and its interval?',
     dataClearedSuccess: "All data cleared successfully!",
 
+    // Firebase/Error Messages
+    pleaseEnterKilometers: "Please enter kilometers",
+    pleaseSelectAtLeastOneTag: "Please select at least one maintenance tag",
+    maintenanceRecordSaved: "Maintenance record saved successfully!",
+    failedToSaveRecord: "Failed to save maintenance record",
+    confirmDeleteRecord: "Are you sure you want to delete this record?",
+    recordDeleted: "Record deleted successfully!",
+    failedToDeleteRecord: "Failed to delete record",
+    loadingRecords: "Loading records...",
+    saving: "Saving...",
+    additionalNotes: "Additional Notes",
+    optionalNotesDescription: "Add any additional notes about this maintenance",
+    enterNotes: "Enter notes...",
+
     // Time formatting
     jan: "Jan",
     feb: "Feb",
@@ -175,6 +190,7 @@ const translations = {
     // Track/Check Status
     maintenanceCheck: "Kiểm tra đợt bảo dưỡng",
     currentOdometerReading: "Số km hiện tại",
+    takePhotoOdometer: "Chụp ảnh đồng hồ km hiện tại",
     takePhotoToCheck: "Chụp ảnh đồng hồ km hiện tại để kiểm tra tình trạng bảo dưỡng",
     takeCurrentReading: "Chụp số km hiện tại",
     orEnterManually: "Hoặc nhập thủ công:",
@@ -232,6 +248,20 @@ const translations = {
     confirmClearData: "Bạn có chắc chắn muốn xóa tất cả bản ghi bảo dưỡng? Hành động này không thể hoàn tác.",
     confirmRemoveTag: 'Xóa nhãn "{tag}" và chu kỳ của nó?',
     dataClearedSuccess: "Đã xóa tất cả dữ liệu thành công!",
+
+    // Firebase/Error Messages
+    pleaseEnterKilometers: "Vui lòng nhập số km",
+    pleaseSelectAtLeastOneTag: "Vui lòng chọn ít nhất một loại bảo dưỡng",
+    maintenanceRecordSaved: "Đã lưu đợt bảo dưỡng thành công!",
+    failedToSaveRecord: "Không thể lưu đợt bảo dưỡng",
+    confirmDeleteRecord: "Bạn có chắc muốn xóa đợt bảo dưỡng này?",
+    recordDeleted: "Đã xóa đợt bảo dưỡng thành công!",
+    failedToDeleteRecord: "Không thể xóa đợt bảo dưỡng",
+    loadingRecords: "Đang tải dữ liệu...",
+    saving: "Đang lưu...",
+    additionalNotes: "Ghi chú bổ sung",
+    optionalNotesDescription: "Thêm ghi chú về đợt bảo dưỡng này",
+    enterNotes: "Nhập ghi chú...",
 
     // Time formatting
     jan: "Th1",

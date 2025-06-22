@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
@@ -13,11 +13,16 @@ import { Camera, ArrowLeft, Check, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/contexts/language-context"
+import { useFirebase } from "@/hooks/use-firebase"
+import { toast } from "sonner"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
-export default function AddMaintenancePage() {
+function AddMaintenancePageContent() {
   const { t } = useLanguage()
+  const { addRecord, loading, error } = useFirebase()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [kilometers, setKilometers] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState("")
@@ -34,6 +39,7 @@ export default function AddMaintenancePage() {
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setPhotoFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         setPhoto(e.target?.result as string)
@@ -67,23 +73,40 @@ export default function AddMaintenancePage() {
     setSelectedTags((prev) => prev.filter((t) => t !== tag))
   }
 
-  const handleSave = () => {
-    const newRecord = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      kilometers: Number.parseInt(kilometers),
-      tags: selectedTags,
-      photo,
-      notes,
+  const handleSave = async () => {
+    if (!kilometers.trim()) {
+      toast.error(t("pleaseEnterKilometers"))
+      return
     }
 
-    // Save to localStorage
-    const existingRecords = JSON.parse(localStorage.getItem("maintenance-records") || "[]")
-    const updatedRecords = [...existingRecords, newRecord]
-    localStorage.setItem("maintenance-records", JSON.stringify(updatedRecords))
+    if (selectedTags.length === 0) {
+      toast.error(t("pleaseSelectAtLeastOneTag"))
+      return
+    }
 
-    router.push("/")
+    try {
+      const newRecord = {
+        date: new Date().toISOString(),
+        kilometers: Number.parseInt(kilometers),
+        tags: selectedTags,
+        notes: notes.trim() || undefined,
+      }
+
+      await addRecord(newRecord, photoFile || undefined)
+      toast.success(t("maintenanceRecordSaved"))
+      router.push("/")
+    } catch (err) {
+      toast.error(t("failedToSaveRecord"))
+      console.error("Error saving record:", err)
+    }
   }
+
+  // Show error toast if there's an error
+  React.useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -200,16 +223,18 @@ export default function AddMaintenancePage() {
 
                 {/* Selected Tags */}
                 {selectedTags.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>{t("selectedTags")}:</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTags.map((tag) => (
-                        <Badge key={tag} className="flex items-center gap-1">
-                          {tag}
-                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <Badge key={tag} variant="default" className="flex items-center gap-1">
+                        {tag}
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="ml-1 hover:bg-red-500 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -217,33 +242,48 @@ export default function AddMaintenancePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{t("notesOptional")}</CardTitle>
+                <CardTitle>{t("additionalNotes")}</CardTitle>
+                <CardDescription>{t("optionalNotesDescription")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder={t("addAdditionalNotes")}
+                  placeholder={t("enterNotes")}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
                 />
               </CardContent>
             </Card>
 
-            <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                {t("back")}
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="flex-1 flex items-center gap-2"
-                disabled={!kilometers || selectedTags.length === 0}
-              >
-                <Check className="h-4 w-4" />
-                {t("saveRecord")}
-              </Button>
-            </div>
+            {/* Save Button */}
+            <Button
+              onClick={handleSave}
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {t("saving")}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  {t("saveRecord")}
+                </div>
+              )}
+            </Button>
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+export default function AddMaintenancePage() {
+  return (
+    <ProtectedRoute>
+      <AddMaintenancePageContent />
+    </ProtectedRoute>
   )
 }

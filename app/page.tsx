@@ -1,86 +1,68 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Camera, History, Settings, Bell, Wrench, Gauge } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
+import { useFirebase } from "@/hooks/use-firebase"
+import { MaintenanceRecord } from "@/lib/firebase-services"
+import { toast } from "sonner"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { UserProfile } from "@/components/auth/user-profile"
 
-interface MaintenanceRecord {
-  id: string
-  date: string
-  kilometers: number
-  tags: string[]
-  photo?: string
-  nextDue?: {
-    kilometers?: number
-    date?: string
-  }
-}
-
-export default function HomePage() {
+function HomePageContent() {
   const { t } = useLanguage()
-  const [records, setRecords] = useState<MaintenanceRecord[]>([])
+  const { records, loading, error } = useFirebase()
   const [overdueCount, setOverdueCount] = useState(0)
 
   useEffect(() => {
-    // Load records from localStorage
-    const savedRecords = localStorage.getItem("maintenance-records")
-    const savedTagIntervals = localStorage.getItem("tag-intervals")
+    // Check for overdue maintenance using tag intervals
+    const tagIntervals = [
+      { tag: "Oil Change", kilometers: 3000, days: 90, enabled: true },
+      { tag: "Air Filter", kilometers: 6000, days: 180, enabled: true },
+      { tag: "Spark Plug", kilometers: 8000, days: 365, enabled: true },
+      { tag: "Chain Cleaning", kilometers: 1000, days: 30, enabled: true },
+      { tag: "Brake Pads", kilometers: 15000, days: 730, enabled: true },
+      { tag: "Tire Check", kilometers: 5000, days: 180, enabled: true },
+      { tag: "Battery Check", kilometers: 10000, days: 365, enabled: true },
+    ]
 
-    if (savedRecords) {
-      const parsedRecords = JSON.parse(savedRecords)
-      setRecords(parsedRecords)
+    const currentKm = getCurrentKilometers(records)
+    const currentDate = new Date()
 
-      // Check for overdue maintenance using tag intervals
-      const tagIntervals = savedTagIntervals
-        ? JSON.parse(savedTagIntervals)
-        : [
-            { tag: "Oil Change", kilometers: 3000, days: 90, enabled: true },
-            { tag: "Air Filter", kilometers: 6000, days: 180, enabled: true },
-            { tag: "Spark Plug", kilometers: 8000, days: 365, enabled: true },
-            { tag: "Chain Cleaning", kilometers: 1000, days: 30, enabled: true },
-            { tag: "Brake Pads", kilometers: 15000, days: 730, enabled: true },
-            { tag: "Tire Check", kilometers: 5000, days: 180, enabled: true },
-            { tag: "Battery Check", kilometers: 10000, days: 365, enabled: true },
-          ]
+    let overdue = 0
+    tagIntervals.forEach((interval: any) => {
+      if (!interval.enabled) return
 
-      const currentKm = getCurrentKilometers(parsedRecords)
-      const currentDate = new Date()
+      const tagRecords = records
+        .filter((record: MaintenanceRecord) => record.tags.includes(interval.tag))
+        .sort((a: MaintenanceRecord, b: MaintenanceRecord) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-      let overdue = 0
-      tagIntervals.forEach((interval: any) => {
-        if (!interval.enabled) return
+      const lastMaintenance = tagRecords[0]
 
-        const tagRecords = parsedRecords
-          .filter((record: MaintenanceRecord) => record.tags.includes(interval.tag))
-          .sort((a: MaintenanceRecord, b: MaintenanceRecord) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      if (lastMaintenance) {
+        const kmSince = currentKm - lastMaintenance.kilometers
+        const daysSince = Math.floor(
+          (currentDate.getTime() - new Date(lastMaintenance.date).getTime()) / (1000 * 60 * 60 * 24),
+        )
 
-        const lastMaintenance = tagRecords[0]
-
-        if (lastMaintenance) {
-          const kmSince = currentKm - lastMaintenance.kilometers
-          const daysSince = Math.floor(
-            (currentDate.getTime() - new Date(lastMaintenance.date).getTime()) / (1000 * 60 * 60 * 24),
-          )
-
-          if (
-            (interval.kilometers && kmSince >= interval.kilometers) ||
-            (interval.days && daysSince >= interval.days)
-          ) {
-            overdue++
-          }
-        } else if (currentKm > 0) {
-          // No maintenance record for this tag - consider overdue if we have any mileage
+        if (
+          (interval.kilometers && kmSince >= interval.kilometers) ||
+          (interval.days && daysSince >= interval.days)
+        ) {
           overdue++
         }
-      })
+      } else if (currentKm > 0) {
+        // No maintenance record for this tag - consider overdue if we have any mileage
+        overdue++
+      }
+    })
 
-      setOverdueCount(overdue)
-    }
-  }, [])
+    setOverdueCount(overdue)
+  }, [records])
 
   const getCurrentKilometers = (records: MaintenanceRecord[]) => {
     if (records.length === 0) return 0
@@ -93,14 +75,24 @@ export default function HomePage() {
 
   const currentKm = getCurrentKilometers(records)
 
+  // Show error toast if there's an error
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <Wrench className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold">{t("appName")}</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wrench className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold">{t("appName")}</h1>
+            </div>
+            <UserProfile />
           </div>
           <p className="text-gray-600">{t("appDescription")}</p>
         </div>
@@ -161,7 +153,12 @@ export default function HomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {getRecentRecords().length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">{t("loadingRecords")}</p>
+              </div>
+            ) : getRecentRecords().length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Wrench className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>{t("noRecordsYet")}</p>
@@ -201,5 +198,13 @@ export default function HomePage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <ProtectedRoute>
+      <HomePageContent />
+    </ProtectedRoute>
   )
 }

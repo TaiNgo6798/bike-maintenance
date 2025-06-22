@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { ArrowLeft, Bell, Trash2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
 interface TagInterval {
   tag: string
@@ -19,7 +20,7 @@ interface TagInterval {
   enabled: boolean
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const { t } = useLanguage()
 
   const DEFAULT_TAG_INTERVALS: TagInterval[] = [
@@ -226,5 +227,13 @@ export default function SettingsPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsPageContent />
+    </ProtectedRoute>
   )
 }
