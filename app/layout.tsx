@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { LanguageProvider } from "@/contexts/language-context"
+import { LanguageProvider } from "@/contexts/locale/language-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { PWAInstaller } from "@/components/pwa-installer"
 

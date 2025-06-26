@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/contexts/locale/language-context"
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()

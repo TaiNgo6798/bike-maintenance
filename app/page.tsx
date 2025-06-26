@@ -5,7 +5,7 @@ import { UserProfile } from "@/components/auth/user-profile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/contexts/locale/language-context"
 import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
 import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceRecord } from "@/types"
@@ -15,17 +15,48 @@ import Link from "next/link"
 function HomePageContent() {
   const { t } = useLanguage()
   const { records, loading } = useMantenanceQuery()
-  const { userTags, loading: tagsLoading } = useTagQuery()
+  const { userTags, loading: tagsLoading, getEnabledTagIntervals } = useTagQuery()
 
-  const getCurrentKilometers = (records: MaintenanceRecord[]) => {
+  const getLatestMantenanceOdo = (records: MaintenanceRecord[]) => {
     if (records.length === 0) return 0
     return Math.max(...records.map((r) => r.kilometers))
   }
 
-  const getRecentRecords = () => {
+  const getRecentMantenanceRecords = () => {
     return records
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3)
+  }
+
+  const getNextMaintenanceInfo = () => {
+    const latestOdo = getLatestMantenanceOdo(records)
+    const enabledTags = getEnabledTagIntervals()
+    
+    return enabledTags.map((tag) => {
+      // Find the most recent maintenance for this tag
+      const tagRecords = records
+        .filter((record) => record.tagIDs.includes(tag.id!))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+      const lastMaintenance = tagRecords[0]
+      
+      if (!lastMaintenance || !tag.kilometers) {
+        return null
+      }
+
+      const kmSinceLastMaintenance = latestOdo - lastMaintenance.kilometers
+      const nextMaintenanceOdo = lastMaintenance.kilometers + tag.kilometers
+      const kmUntilNext = nextMaintenanceOdo - latestOdo
+
+      return {
+        tag,
+        lastMaintenance,
+        nextMaintenanceOdo,
+        kmUntilNext,
+        kmSinceLastMaintenance
+      }
+    }).filter((info): info is NonNullable<typeof info> => info !== null)
+    .sort((a, b) => a.kmUntilNext - b.kmUntilNext)
   }
 
   return (
@@ -55,14 +86,30 @@ function HomePageContent() {
         {/* Content - only show when not loading */}
         {!loading && !tagsLoading && (
           <>
-            {/* Current Kilometers */}
+            {/* Latest Maintenance ODO */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg text-center">{t("latestKM")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-center text-blue-600">
-                  {getCurrentKilometers(records).toLocaleString()} km
+                  {getLatestMantenanceOdo(records).toLocaleString()} km
+                </div>
+                {/* Next maintenance info */}
+                <div className="mt-10 space-y-2">
+                  <h2 className="text-md font-bold text-left">{t("nextMaintenance")}</h2>
+                  {getNextMaintenanceInfo().length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center">{t("noMaintenanceScheduled") || "No maintenance scheduled"}</p>
+                  ) : (
+                    getNextMaintenanceInfo().map((info) => (
+                      <div key={info.tag.id} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                        <span className="font-medium">{info.tag.name}</span>
+                        <span className="font-semibold text-green-600">
+                          {info.nextMaintenanceOdo.toLocaleString()} km
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -95,13 +142,13 @@ function HomePageContent() {
                 <CardTitle className="text-lg text-center">{t("recentMaintenance")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {getRecentRecords().length === 0 ? (
+                {getRecentMantenanceRecords().length === 0 ? (
                   <p className="text-center text-gray-500 py-4">{t("noRecordsYet")}</p>
                 ) : (
-                  getRecentRecords().map((record) => (
+                  getRecentMantenanceRecords().map((record) => (
                     <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <div className="font-medium">{record.kilometers.toLocaleString()} km</div>
+                        <div className="font-medium text-blue-600">{record.kilometers.toLocaleString()} km</div>
                         <div className="text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</div>
                       </div>
                       <div className="flex flex-wrap gap-1">

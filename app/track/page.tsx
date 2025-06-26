@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/contexts/locale/language-context"
 import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
 import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceStatus } from "@/types"

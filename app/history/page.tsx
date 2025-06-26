@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/contexts/locale/language-context"
 import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
 import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceRecord } from "@/types"
@@ -118,13 +118,13 @@ function HistoryPageContent() {
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{records.length}</div>
+              <div className="text-2xl font-bold text-green-600">{records.length}</div>
               <div className="text-sm text-gray-600">{t("totalRecords")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-blue-600">
                 {records.length > 0 ? records[0].kilometers.toLocaleString() : "0"}
               </div>
               <div className="text-sm text-gray-600">{t("latestKM")}</div>
@@ -162,7 +162,7 @@ function HistoryPageContent() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-gray-500" />
-                          <span className="font-semibold">{record.kilometers.toLocaleString()} km</span>
+                          <span className="font-semibold text-blue-600">{record.kilometers.toLocaleString()} km</span>
                           {kmSince && (
                             <Badge variant="outline" className="text-xs">
                               +{kmSince.toLocaleString()} km

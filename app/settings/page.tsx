@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { useLanguage } from "@/contexts/language-context"
+import { useLanguage } from "@/contexts/locale/language-context"
 import { useTagQuery } from "@/hooks/use-tag-query"
-import { ArrowLeft, Bell, Cloud, Plus, Save, X } from "lucide-react"
+import { ArrowLeft, Cloud, Plus, Save, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -20,12 +20,11 @@ import * as z from "zod"
 import { twMerge } from "tailwind-merge"
 
 const settingsSchema = z.object({
-  notifications: z.boolean(),
   tagIntervals: z.array(z.object({
     id: z.string().optional(),
     name: z.string(),
     kilometers: z.number().min(1).optional(),
-    days: z.number().min(1).optional(),
+    days: z.number().or(z.nan()).optional(),
     enabled: z.boolean(),
   })),
 })
@@ -42,10 +41,10 @@ function SettingsPageContent() {
   const settingsForm = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      notifications: true,
       tagIntervals: [],
     },
   })
+  
 
   const { fields: tagIntervals, remove, update, prepend } = useFieldArray({
     control: settingsForm.control,
@@ -60,9 +59,6 @@ function SettingsPageContent() {
     }
   }, [tagIntervalData, settingsForm])
 
-  const toggleNotifications = (enabled: boolean) => {
-    settingsForm.setValue("notifications", enabled)
-  }
 
   const saveSettings = async (data: SettingsFormData) => {
     try {
@@ -140,7 +136,6 @@ function SettingsPageContent() {
     prepend({
       name: newTagName.trim(),
       kilometers: 5000,
-      days: 90,
       enabled: true,
     })
 
@@ -162,7 +157,7 @@ function SettingsPageContent() {
 
         <form onSubmit={settingsForm.handleSubmit(saveSettings)}>
           {/* Notifications */}
-          <Card className="mb-6">
+          {/* <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
@@ -175,7 +170,7 @@ function SettingsPageContent() {
                 <Switch id="notifications" checked={settingsForm.getValues("notifications")} onCheckedChange={toggleNotifications} />
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Language */}
           <Card className="mb-6">

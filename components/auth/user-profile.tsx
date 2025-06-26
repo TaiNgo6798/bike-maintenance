@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/auth-context'
-import { useLanguage } from '@/contexts/language-context'
+import { useLanguage } from '@/contexts/locale/language-context'
 import { LogOut } from 'lucide-react'
 
 export const UserProfile: React.FC = () => {
