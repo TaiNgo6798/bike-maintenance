@@ -5,12 +5,12 @@ import {
   updateTagInterval,
   deleteTagInterval,
   getUserTags,
-} from '@/lib/firebase-services'
+} from '@/lib/firebase/firestore'
 import { useAuth } from '@/contexts/auth-context'
 import { cleanUndefinedValues } from '@/lib/utils'
 import { TagInterval } from '@/types'
 
-export const useTags = () => {
+export const useTagQuery = () => {
   const [tagIntervals, setTagIntervals] = useState<TagInterval[]>([])
   const [userTags, setUserTags] = useState<TagInterval[]>([])
   const [loading, setLoading] = useState(false)

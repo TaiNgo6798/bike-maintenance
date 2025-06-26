@@ -6,16 +6,16 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/contexts/language-context"
-import { useFirebase } from "@/hooks/use-firebase"
-import { useTags } from "@/hooks/use-tags"
+import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
+import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceRecord } from "@/types"
 import { Camera, Gauge, History, Settings, Wrench } from "lucide-react"
 import Link from "next/link"
 
 function HomePageContent() {
   const { t } = useLanguage()
-  const { records, loading } = useFirebase()
-  const { userTags, loading: tagsLoading } = useTags()
+  const { records, loading } = useMantenanceQuery()
+  const { userTags, loading: tagsLoading } = useTagQuery()
 
   const getCurrentKilometers = (records: MaintenanceRecord[]) => {
     if (records.length === 0) return 0

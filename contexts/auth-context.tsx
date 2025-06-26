@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, onAuthStateChanged } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
-import { signInWithGoogle, signOutUser, getAuthErrorMessage } from '@/lib/auth-services'
+import { auth } from '@/lib/firebase/client'
+import { signInWithGoogle, signOutUser, getAuthErrorMessage } from '@/lib/firebase/auth-services'
 
 interface AuthContextType {
   user: User | null

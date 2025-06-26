@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
-import { useFirebase } from "@/hooks/use-firebase"
-import { useTags } from "@/hooks/use-tags"
+import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
+import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceRecord } from "@/types"
 import { ArrowLeft, Calendar, MapPin, Trash2 } from "lucide-react"
 import Link from "next/link"
@@ -16,8 +16,8 @@ import { toast } from "sonner"
 
 function HistoryPageContent() {
   const { t } = useLanguage()
-  const { records, loading, error, deleteRecord } = useFirebase()
-  const { userTags, loading: tagsLoading } = useTags()
+  const { records, loading, error, deleteRecord } = useMantenanceQuery()
+  const { userTags, loading: tagsLoading } = useTagQuery()
   const { user } = useAuth()
   const [filteredRecords, setFilteredRecords] = useState<MaintenanceRecord[]>([])
 

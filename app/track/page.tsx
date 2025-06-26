@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { useLanguage } from "@/contexts/language-context"
-import { useFirebase } from "@/hooks/use-firebase"
-import { useTags } from "@/hooks/use-tags"
+import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
+import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceStatus } from "@/types"
 import { AlertTriangle, ArrowLeft, Camera, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
@@ -18,8 +18,8 @@ import { toast } from "sonner"
 
 function TrackPageContent() {
   const { t } = useLanguage()
-  const { records } = useFirebase()
-  const { getEnabledTagIntervals } = useTags()
+  const { records } = useMantenanceQuery()
+  const { getEnabledTagIntervals } = useTagQuery()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
   const [currentKm, setCurrentKm] = useState("")
@@ -376,9 +376,6 @@ function TrackPageContent() {
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                 {t("checkAgain")}
               </Button>
-              <Link href="/add-maintenance" className="flex-1">
-                <Button className="w-full">{t("addMaintenance")}</Button>
-              </Link>
             </div>
           </div>
         )}

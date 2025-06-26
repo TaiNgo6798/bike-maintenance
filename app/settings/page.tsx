@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useLanguage } from "@/contexts/language-context"
-import { useTags } from "@/hooks/use-tags"
+import { useTagQuery } from "@/hooks/use-tag-query"
 import { ArrowLeft, Bell, Cloud, Plus, Save, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -34,7 +34,7 @@ type SettingsFormData = z.infer<typeof settingsSchema>
 
 function SettingsPageContent() {
   const { t } = useLanguage()
-  const { tagIntervals: tagIntervalData, loading, error, addTag, updateTag, deleteTag } = useTags()
+  const { tagIntervals: tagIntervalData, loading, error, addTag, updateTag, deleteTag } = useTagQuery()
 
   const [newTagName, setNewTagName] = useState("")
 

@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useLanguage } from "@/contexts/language-context"
-import { useFirebase } from "@/hooks/use-firebase"
-import { useTags } from "@/hooks/use-tags"
+import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
+import { useTagQuery } from "@/hooks/use-tag-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeft, ArrowRight, Camera, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
@@ -27,8 +27,8 @@ type MaintenanceFormData = {
 
 function AddMaintenancePageContent() {
   const { t } = useLanguage()
-  const { addRecord, loading, error } = useFirebase()
-  const { userTags, loading: tagsLoading } = useTags()
+  const { addRecord, loading, error } = useMantenanceQuery()
+  const { userTags, loading: tagsLoading } = useTagQuery()
   const [step, setStep] = useState(1)
   const [photo, setPhoto] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)

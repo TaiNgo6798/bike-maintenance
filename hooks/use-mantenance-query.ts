@@ -6,12 +6,12 @@ import {
   updateMaintenanceRecord,
   searchMaintenanceRecords,
   uploadImage,
-} from '@/lib/firebase-services'
+} from '@/lib/firebase/firestore'
 import { useAuth } from '@/contexts/auth-context'
 import { cleanUndefinedValues } from '@/lib/utils'
 import { MaintenanceRecord } from '@/types'
 
-export const useFirebase = () => {
+export const useMantenanceQuery = () => {
   const [records, setRecords] = useState<MaintenanceRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -5,7 +5,7 @@ import {
   User,
   UserCredential,
 } from 'firebase/auth'
-import { auth } from './firebase'
+import { auth } from './client'
 
 export interface AuthError {
   code: string

@@ -11,12 +11,21 @@ import {
   where,
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { db, storage } from './firebase'
-import { MaintenanceRecord, TagInterval } from '@/types'
+import { db, storage } from '../client'
+import { MaintenanceRecord } from '@/types'
+
+// Constants
+const MAINTENANCE_RECORDS_COLLECTION = 'maintenance-records'
+const MAINTENANCE_IMAGES_STORAGE_PATH = 'maintenance-images'
+const ERROR_DELETING_IMAGE = 'Error deleting image:'
+const ERROR_INDEXED_QUERY = 'Error with indexed query, trying fallback:'
+const ERROR_FALLBACK_QUERY = 'Fallback query also failed:'
+const ERROR_INDEXED_SEARCH_QUERY = 'Error with indexed search query, trying fallback:'
+const ERROR_FALLBACK_SEARCH_QUERY = 'Fallback search query also failed:'
 
 // Upload image to Firebase Storage
 export const uploadImage = async (file: File, recordId: string): Promise<string> => {
-  const storageRef = ref(storage, `maintenance-images/${recordId}/${file.name}`)
+  const storageRef = ref(storage, `${MAINTENANCE_IMAGES_STORAGE_PATH}/${recordId}/${file.name}`)
   const snapshot = await uploadBytes(storageRef, file)
   const downloadURL = await getDownloadURL(snapshot.ref)
   return downloadURL
@@ -28,13 +37,13 @@ export const deleteImage = async (imageUrl: string): Promise<void> => {
     const imageRef = ref(storage, imageUrl)
     await deleteObject(imageRef)
   } catch (error) {
-    console.error('Error deleting image:', error)
+    console.error(ERROR_DELETING_IMAGE, error)
   }
 }
 
 // Add a new maintenance record
 export const addMaintenanceRecord = async (record: Omit<MaintenanceRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, 'maintenance-records'), {
+  const docRef = await addDoc(collection(db, MAINTENANCE_RECORDS_COLLECTION), {
     ...record,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
@@ -47,7 +56,7 @@ export const getMaintenanceRecords = async (userId: string): Promise<Maintenance
   try {
     // Try with composite index first
     const q = query(
-      collection(db, 'maintenance-records'), 
+      collection(db, MAINTENANCE_RECORDS_COLLECTION), 
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
@@ -58,12 +67,12 @@ export const getMaintenanceRecords = async (userId: string): Promise<Maintenance
       ...doc.data(),
     })) as MaintenanceRecord[]
   } catch (error: any) {
-    console.error('Error with indexed query, trying fallback:', error)
+    console.error(ERROR_INDEXED_QUERY, error)
     
     // Fallback: query without orderBy (no composite index needed)
     try {
       const fallbackQuery = query(
-        collection(db, 'maintenance-records'), 
+        collection(db, MAINTENANCE_RECORDS_COLLECTION), 
         where('userId', '==', userId)
       )
       const querySnapshot = await getDocs(fallbackQuery)
@@ -76,7 +85,7 @@ export const getMaintenanceRecords = async (userId: string): Promise<Maintenance
       // Sort in JavaScript
       return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     } catch (fallbackError) {
-      console.error('Fallback query also failed:', fallbackError)
+      console.error(ERROR_FALLBACK_QUERY, fallbackError)
       throw fallbackError
     }
   }
@@ -90,7 +99,7 @@ export const deleteMaintenanceRecord = async (recordId: string, imageUrl?: strin
   }
   
   // Delete the document
-  await deleteDoc(doc(db, 'maintenance-records', recordId))
+  await deleteDoc(doc(db, MAINTENANCE_RECORDS_COLLECTION, recordId))
 }
 
 // Update a maintenance record
@@ -98,7 +107,7 @@ export const updateMaintenanceRecord = async (
   recordId: string, 
   updates: Partial<Omit<MaintenanceRecord, 'id' | 'createdAt'>>
 ): Promise<void> => {
-  await updateDoc(doc(db, 'maintenance-records', recordId), {
+  await updateDoc(doc(db, MAINTENANCE_RECORDS_COLLECTION, recordId), {
     ...updates,
     updatedAt: Timestamp.now(),
   })
@@ -109,7 +118,7 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
   try {
     // Try with composite index first
     const q = query(
-      collection(db, 'maintenance-records'),
+      collection(db, MAINTENANCE_RECORDS_COLLECTION),
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
@@ -128,12 +137,12 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
       )
     })
   } catch (error: any) {
-    console.error('Error with indexed search query, trying fallback:', error)
+    console.error(ERROR_INDEXED_SEARCH_QUERY, error)
     
     // Fallback: query without orderBy (no composite index needed)
     try {
       const fallbackQuery = query(
-        collection(db, 'maintenance-records'),
+        collection(db, MAINTENANCE_RECORDS_COLLECTION),
         where('userId', '==', userId)
       )
       const querySnapshot = await getDocs(fallbackQuery)
@@ -154,86 +163,8 @@ export const searchMaintenanceRecords = async (searchTerm: string, userId: strin
         )
       })
     } catch (fallbackError) {
-      console.error('Fallback search query also failed:', fallbackError)
+      console.error(ERROR_FALLBACK_SEARCH_QUERY, fallbackError)
       throw fallbackError
     }
-  }
-}
-
-// Tag Management Functions
-
-// Add a new tag interval
-export const addTagInterval = async (tagInterval: Omit<TagInterval, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, 'tag-intervals'), {
-    ...tagInterval,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-  })
-  return docRef.id
-}
-
-// Get all tag intervals for a specific user
-export const getTagIntervals = async (userId: string): Promise<TagInterval[]> => {
-  try {
-    const q = query(
-      collection(db, 'tag-intervals'),
-      where('userId', '==', userId),
-      orderBy('name', 'asc')
-    )
-    const querySnapshot = await getDocs(q)
-    
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as TagInterval[]
-  } catch (error: any) {
-    console.error('Error fetching tag intervals:', error)
-    
-    // Fallback: query without orderBy
-    try {
-      const fallbackQuery = query(
-        collection(db, 'tag-intervals'),
-        where('userId', '==', userId)
-      )
-      const querySnapshot = await getDocs(fallbackQuery)
-      
-      const tagIntervals = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as TagInterval[]
-      
-      // Sort in JavaScript
-      return tagIntervals.sort((a, b) => a.id!.localeCompare(b.id!))
-    } catch (fallbackError) {
-      console.error('Fallback query also failed:', fallbackError)
-      throw fallbackError
-    }
-  }
-}
-
-// Update a tag interval
-export const updateTagInterval = async (
-  tagIntervalId: string,
-  updates: Partial<Omit<TagInterval, 'id' | 'createdAt' | 'userId'>>
-): Promise<void> => {
-  await updateDoc(doc(db, 'tag-intervals', tagIntervalId), {
-    ...updates,
-    updatedAt: Timestamp.now(),
-  })
-}
-
-// Delete a tag interval
-export const deleteTagInterval = async (tagIntervalId: string): Promise<void> => {
-  await deleteDoc(doc(db, 'tag-intervals', tagIntervalId))
-}
-
-// Get all unique tags for a user (for autocomplete/suggestions)
-export const getUserTags = async (userId: string): Promise<TagInterval[]> => {
-  try {
-    const tagIntervals = await getTagIntervals(userId)
-    return tagIntervals
-  } catch (error) {
-    console.error('Error fetching user tags:', error)
-    return []
   }
 } 
