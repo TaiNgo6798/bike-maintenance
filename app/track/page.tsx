@@ -3,68 +3,24 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { useLanguage } from "@/contexts/locale/language-context"
 import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
 import { useTagQuery } from "@/hooks/use-tag-query"
 import { MaintenanceStatus } from "@/types"
-import { AlertTriangle, ArrowLeft, Camera, CheckCircle, Clock } from "lucide-react"
+import { AlertTriangle, ArrowLeft, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
-import React, { useRef, useState } from "react"
-import { toast } from "sonner"
+import { useState } from "react"
 
 function TrackPageContent() {
   const { t } = useLanguage()
   const { records } = useMantenanceQuery()
   const { getEnabledTagIntervals } = useTagQuery()
   const [step, setStep] = useState(1)
-  const [photo, setPhoto] = useState<string | null>(null)
   const [currentKm, setCurrentKm] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
   const [maintenanceStatus, setMaintenanceStatus] = useState<MaintenanceStatus[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPhoto(e.target?.result as string)
-        setIsProcessing(true)
-      }
-      reader.readAsDataURL(file)
-
-      // Call the ODO detection API
-      try {
-        const formData = new FormData()
-        formData.append('image', file)
-
-        const response = await fetch('/api/odo-detect', {
-          method: 'POST',
-          body: formData
-        })
-
-        if (!response.ok) {
-          const err = await response.json();
-          toast.error(err.error);
-        }
-
-        const { odo } = await response.json()
-        
-        // Set the detected kilometers
-        setCurrentKm(odo)
-        analyzeMaintenanceStatus(Number.parseInt(odo))
-      } catch (error) {
-        console.error('Error detecting ODO:', error)
-        toast.error(t("failedToDetectODO"))
-      } finally {
-        setIsProcessing(false)
-      }
-    }
-  }
 
   const analyzeMaintenanceStatus = (currentKilometers: number) => {
     const tagIntervals = getEnabledTagIntervals()
@@ -136,10 +92,18 @@ function TrackPageContent() {
       })
     })
 
-    // Sort by priority: overdue first, then due-soon, then ok
+    // Sort by priority first, then by kmUntilDue
     statusList.sort((a, b) => {
       const priority = { overdue: 0, "due-soon": 1, ok: 2 }
-      return priority[a.status] - priority[b.status]
+      const statusDiff = priority[a.status] - priority[b.status]
+      
+      // If statuses are different, sort by status priority
+      if (statusDiff !== 0) {
+        return statusDiff
+      }
+      
+      // If statuses are the same, sort by kmUntilDue
+      return (a.kmUntilDue || 0) - (b.kmUntilDue || 0)
     })
 
     setMaintenanceStatus(statusList)
@@ -211,46 +175,9 @@ function TrackPageContent() {
           <Card>
             <CardHeader>
               <CardTitle>{t("currentOdometerReading")}</CardTitle>
-              <CardDescription>{t("takePhotoOdometer")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePhotoCapture}
-                ref={fileInputRef}
-                className="hidden"
-              />
-
-              {!photo ? (
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-32 flex flex-col gap-2 border-2 border-dashed"
-                  variant="outline"
-                >
-                  <Camera className="h-8 w-8" />
-                  {t("takeCurrentReading")}
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  <img
-                    src={photo || "/placeholder.svg"}
-                    alt="Current Odometer"
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                  {isProcessing && (
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">{t("analyzingMaintenanceStatus")}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Manual input option */}
               <div className="space-y-2">
-                <Label htmlFor="manual-km">{t("orEnterManually")}:</Label>
                 <div className="flex gap-2">
                   <Input
                     id="manual-km"
@@ -347,11 +274,10 @@ function TrackPageContent() {
                               )}
                             </div>
                           )}
-
-                          {status.interval.days && (
+                          {status.interval.days ? (
                             <div className="text-sm text-gray-600">
                               {t("days")}: {status.daysSinceLastMaintenance} / {status.interval.days}
-                              {status.daysUntilDue !== undefined && (
+                              {status.daysUntilDue && (
                                 <span className="ml-2">
                                   (
                                   {status.daysUntilDue > 0
@@ -361,7 +287,7 @@ function TrackPageContent() {
                                 </span>
                               )}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       ) : (
                         <div className="text-sm text-gray-600">{t("noPreviousMaintenance")}</div>
