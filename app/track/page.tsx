@@ -170,7 +170,6 @@ function TrackPageContent() {
           <h1 className="text-xl font-bold">{t("maintenanceCheck")}</h1>
         </div>
 
-        {/* Step 1: Photo Capture */}
         {step === 1 && (
           <Card>
             <CardHeader>
@@ -195,7 +194,6 @@ function TrackPageContent() {
           </Card>
         )}
 
-        {/* Step 2: Maintenance Status */}
         {step === 2 && (
           <div className="space-y-6">
             <Card>
