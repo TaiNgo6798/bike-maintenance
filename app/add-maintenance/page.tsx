@@ -172,6 +172,7 @@ function AddMaintenancePageContent() {
                 <Input
                   id="kilometers"
                   type="number"
+                  inputMode="numeric"
                   {...register("kilometers")}
                   placeholder={t("enterKilometers")}
                   className={errors.kilometers ? "border-red-500" : ""}

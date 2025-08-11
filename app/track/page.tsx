@@ -181,6 +181,7 @@ function TrackPageContent() {
                   <Input
                     id="manual-km"
                     type="number"
+                    inputMode="numeric"
                     value={currentKm}
                     onChange={(e) => setCurrentKm(e.target.value)}
                     placeholder={t("currentKilometers")}
