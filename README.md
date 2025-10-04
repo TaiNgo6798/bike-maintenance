@@ -16,6 +16,15 @@ A comprehensive bike maintenance tracking app built with Next.js, TypeScript, an
 - 🔔 **Maintenance Reminders**: Get notified about upcoming maintenance
 - 👤 **User-Specific Data**: Each user's maintenance records are isolated
 
+## Screenshots
+<img width="533" height="1230" alt="image" src="https://github.com/user-attachments/assets/453064ad-58d8-4b2a-827a-80f443d029e5" />
+<img width="516" height="1226" alt="image" src="https://github.com/user-attachments/assets/bd521aae-6fa9-43d2-8864-fa5594bddec7" />
+<img width="522" height="1014" alt="image" src="https://github.com/user-attachments/assets/e8058ffc-3786-4fc8-af37-d322bdbcc101" />
+<img width="524" height="1228" alt="image" src="https://github.com/user-attachments/assets/f1f8cf2f-1144-4c81-b000-db57301978ac" />
+
+
+
+
 ## Firebase Setup
 
 This app uses Firebase for authentication, data storage, and image uploads. Follow these steps to set up Firebase:
