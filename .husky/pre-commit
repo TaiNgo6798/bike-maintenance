@@ -1,2 +1,3 @@
 npm run lint
+npm version minor --no-git-tag-version
 git add .
