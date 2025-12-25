@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useLanguage } from "@/contexts/locale/language-context"
 import { useTagQuery } from "@/hooks/use-tag-query"
-import { ArrowLeft, Cloud, Plus, Save, X } from "lucide-react"
+import { APP_VERSION } from "@/lib/version"
+import { ArrowLeft, Cloud, Info, Plus, Save, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -298,6 +299,24 @@ function SettingsPageContent() {
             {t("save")}
           </Button>
         </form>
+
+        {/* About / App Version */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              {t("about")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-sm text-gray-600">
+              {t("appAbout")}
+            </div>
+            <div className="text-xs text-gray-500 pt-2 border-t">
+              {t("appName")} v{APP_VERSION}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
