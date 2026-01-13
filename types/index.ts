@@ -33,3 +33,20 @@ export interface TagInterval {
     createdAt?: Timestamp
     updatedAt?: Timestamp
 }
+
+export interface OdoCheckResult {
+    tagId?: string
+    tagName: string
+    status: "overdue" | "due-soon" | "ok"
+    kmUntilDue?: number
+    daysUntilDue?: number
+}
+
+export interface OdoCheckRecord {
+    id?: string
+    userId: string
+    date: string // ISO date string
+    kilometers: number
+    results: OdoCheckResult[] // Snapshot of maintenance status at this check
+    createdAt?: Timestamp
+}

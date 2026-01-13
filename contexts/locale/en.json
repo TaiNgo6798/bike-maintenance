@@ -81,5 +81,10 @@
   "dec": "Dec",
   "signOut": "Sign Out",
   "settingsSavedSuccessfully": "Settings saved successfully",
-  "failedToSaveSettings": "Failed to save settings"
+  "failedToSaveSettings": "Failed to save settings",
+  "viewHistory": "View Check History",
+  "checkHistory": "Odometer Check History",
+  "noHistory": "No check history found.",
+  "kmLeft": "km left",
+  "kmOverdue": "km overdue"
 }

@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/locale/language-context'
-import { LogOut } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
+import Link from 'next/link'
 
 export const UserProfile: React.FC = () => {
   const { user, signOut } = useAuth()
@@ -63,6 +64,13 @@ export const UserProfile: React.FC = () => {
             </p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>{t("settingsIntervals")}</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

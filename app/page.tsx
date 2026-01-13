@@ -2,6 +2,7 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { UserProfile } from "@/components/auth/user-profile"
+import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,14 +11,16 @@ import { Progress } from "@/components/ui/progress"
 import { useLanguage } from "@/contexts/locale/language-context"
 import { useMantenanceQuery } from "@/hooks/use-mantenance-query"
 import { useTagQuery } from "@/hooks/use-tag-query"
+import { addOdoCheck } from "@/lib/firebase/firestore/odo-check"
 import { APP_VERSION } from "@/lib/version"
-import { MaintenanceRecord, MaintenanceStatus } from "@/types"
-import { AlertTriangle, Camera, CheckCircle, Clock, History, Settings } from "lucide-react"
+import { MaintenanceRecord, MaintenanceStatus, OdoCheckRecord, OdoCheckResult } from "@/types"
+import { AlertTriangle, Camera, CheckCircle, Clock, History } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 
 function HomePageContent() {
+  const { user } = useAuth()
   const { t } = useLanguage()
   const { records, loading } = useMantenanceQuery()
   const { userTags, loading: tagsLoading, getEnabledTagIntervals } = useTagQuery()
@@ -151,6 +154,28 @@ function HomePageContent() {
     })
 
     setMaintenanceStatus(statusList)
+
+    // Save the odometer check to history (only if we have a user)
+    if (user) {
+      const odoCheckResults: OdoCheckResult[] = statusList.map(s => {
+        const result: OdoCheckResult = {
+          tagId: s.interval.id,
+          tagName: s.tag,
+          status: s.status,
+        }
+        // Only include defined values (Firestore doesn't allow undefined)
+        if (s.kmUntilDue !== undefined) result.kmUntilDue = s.kmUntilDue
+        if (s.daysUntilDue !== undefined) result.daysUntilDue = s.daysUntilDue
+        return result
+      })
+
+      addOdoCheck({
+        userId: user.uid,
+        date: new Date().toISOString(),
+        kilometers: currentKilometers,
+        results: odoCheckResults
+      }).catch(err => console.error("Failed to save odo check", err))
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -292,6 +317,14 @@ function HomePageContent() {
                       >
                         {t("check")}
                       </Button>
+                    </div>
+                    <div className="flex justify-end">
+                      <Link href="/odo-checks">
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                          <History className="mr-2 h-3 w-3" />
+                          {t("viewHistory") || "View Check History"}
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 ) : (
@@ -449,13 +482,7 @@ function HomePageContent() {
               </CardContent>
             </Card>
 
-            {/* Settings Link */}
-            <Link href="/settings">
-              <Button variant="outline" className="w-full flex items-center gap-2 mt-2">
-                <Settings className="h-4 w-4" />
-                {t("settingsIntervals")}
-              </Button>
-            </Link>
+
           </>
         )}
       </div>
