@@ -3,16 +3,32 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { useOdoCheckQuery } from "@/hooks/use-odo-check-query"
 import { useLanguage } from "@/contexts/locale/language-context"
+import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, AlertTriangle, Clock, CheckCircle } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeft, AlertTriangle, Clock, CheckCircle, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { OdoCheckResult } from "@/types"
+import { useState } from "react"
+import { clearAllOdoChecks } from "@/lib/firebase/firestore/odo-check"
 
 function OdoChecksPageContent() {
   const { t } = useLanguage()
-  const { checks, loading } = useOdoCheckQuery()
+  const { user } = useAuth()
+  const { checks, loading, refetch } = useOdoCheckQuery()
+  const [clearing, setClearing] = useState(false)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -46,17 +62,62 @@ function OdoChecksPageContent() {
     }
   }
 
+  const handleClearAll = async () => {
+    if (!user) return
+
+    setClearing(true)
+    try {
+      await clearAllOdoChecks(user.uid)
+      await refetch()
+    } catch (error) {
+      console.error("Failed to clear odo check history:", error)
+    } finally {
+      setClearing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold">{t("checkHistory") || "Odometer Check History"}</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">{t("checkHistory") || "Odometer Check History"}</h1>
+          </div>
+
+          {checks.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  {t("clearAll") || "Clear All"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("clearHistoryTitle") || "Clear All History?"}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("clearHistoryDescription") || "This will permanently delete all odometer check history. This action cannot be undone."}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("cancel") || "Cancel"}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleClearAll}
+                    className="bg-red-600 hover:bg-red-700"
+                    disabled={clearing}
+                  >
+                    {clearing ? (t("clearing") || "Clearing...") : (t("clearAll") || "Clear All")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
 
         {loading ? (

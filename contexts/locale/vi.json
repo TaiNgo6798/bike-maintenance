@@ -86,5 +86,10 @@
   "checkHistory": "Lịch sử kiểm tra Odo",
   "noHistory": "Chưa có lịch sử kiểm tra.",
   "kmLeft": "km còn lại",
-  "kmOverdue": "km quá hạn"
+  "kmOverdue": "km quá hạn",
+  "clearAll": "Xóa tất cả",
+  "clearHistoryTitle": "Xóa tất cả lịch sử?",
+  "clearHistoryDescription": "Thao tác này sẽ xóa vĩnh viễn tất cả lịch sử kiểm tra Odo. Không thể hoàn tác.",
+  "clearing": "Đang xóa...",
+  "cancel": "Hủy"
 }

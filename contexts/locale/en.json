@@ -86,5 +86,10 @@
   "checkHistory": "Odometer Check History",
   "noHistory": "No check history found.",
   "kmLeft": "km left",
-  "kmOverdue": "km overdue"
+  "kmOverdue": "km overdue",
+  "clearAll": "Clear All",
+  "clearHistoryTitle": "Clear All History?",
+  "clearHistoryDescription": "This will permanently delete all odometer check history. This action cannot be undone.",
+  "clearing": "Clearing...",
+  "cancel": "Cancel"
 }

@@ -4,18 +4,16 @@ import {
   addDoc,
   getDocs,
   query,
-  orderBy,
   Timestamp,
   where,
-  limit,
+  deleteDoc,
+  doc,
 } from 'firebase/firestore'
 import { db } from '../client'
 import { OdoCheckRecord } from '@/types'
 
 // Constants
 const ODO_CHECK_RECORDS_COLLECTION = 'odo-check-records'
-const ERROR_INDEXED_QUERY = 'Error with indexed query, trying fallback:'
-const ERROR_FALLBACK_QUERY = 'Fallback query also failed:'
 
 // Add a new odometer check record
 export const addOdoCheck = async (record: Omit<OdoCheckRecord, 'id' | 'createdAt'>): Promise<string> => {
@@ -39,9 +37,9 @@ export const getLatestOdoCheck = async (userId: string): Promise<OdoCheckRecord 
     return null
   }
 
-  const records = querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
+  const records = querySnapshot.docs.map((docSnapshot) => ({
+    id: docSnapshot.id,
+    ...docSnapshot.data(),
   })) as OdoCheckRecord[]
   
   // Sort in JavaScript and return the latest
@@ -58,11 +56,27 @@ export const getOdoCheckHistory = async (userId: string): Promise<OdoCheckRecord
   )
   const querySnapshot = await getDocs(q)
   
-  const records = querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
+  const records = querySnapshot.docs.map((docSnapshot) => ({
+    id: docSnapshot.id,
+    ...docSnapshot.data(),
   })) as OdoCheckRecord[]
   
   // Sort in JavaScript (most recent first)
   return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+// Clear all odometer check records for a specific user
+export const clearAllOdoChecks = async (userId: string): Promise<void> => {
+  const q = query(
+    collection(db, ODO_CHECK_RECORDS_COLLECTION),
+    where('userId', '==', userId)
+  )
+  const querySnapshot = await getDocs(q)
+
+  // Delete all documents
+  const deletePromises = querySnapshot.docs.map((docSnapshot) =>
+    deleteDoc(doc(db, ODO_CHECK_RECORDS_COLLECTION, docSnapshot.id))
+  )
+
+  await Promise.all(deletePromises)
 }
